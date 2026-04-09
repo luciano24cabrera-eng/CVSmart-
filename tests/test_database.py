@@ -55,3 +55,31 @@ def test_mark_email_sent():
     )
     mark_email_sent(cid)
     assert get_candidate(cid)["email_sent"] == 1
+
+def test_get_all_candidates():
+    insert_candidate(
+        name="C1", email="c1@test.com", phone="", cv_filename="c1.pdf",
+        cv_original_name="c1.pdf", score=9.0, score_label="Excelente",
+        years_experience=5, education_level="Maestría",
+        matching_skills='["Python", "SQL"]', summary="S1", strength="F1",
+        weaknesses='["W1"]', full_analysis='{}',
+        availability="Inmediata", expected_salary="50000", specific_experience="Dev"
+    )
+    insert_candidate(
+        name="C2", email="c2@test.com", phone="", cv_filename="c2.pdf",
+        cv_original_name="c2.pdf", score=5.0, score_label="Bueno",
+        years_experience=2, education_level="Licenciatura",
+        matching_skills='[]', summary="S2", strength="F2",
+        weaknesses='[]', full_analysis='{}',
+        availability="2 semanas", expected_salary="25000", specific_experience="QA"
+    )
+    candidates = get_all_candidates()
+    assert len(candidates) == 2
+    assert candidates[0]["score"] == 9.0  # ordered by score DESC
+    assert candidates[0]["matching_skills"] == ["Python", "SQL"]  # JSON deserialized
+    assert "full_analysis" not in candidates[0]  # not included in list view
+
+def test_get_stats_empty():
+    stats = get_stats()
+    assert stats["total"] == 0
+    assert stats["avg_score"] == 0.0

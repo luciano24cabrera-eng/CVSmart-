@@ -4,6 +4,13 @@ from typing import Optional
 
 DB_PATH = Path(__file__).parent / "cvsmart.db"
 
+_CANDIDATE_FIELDS = {
+    "name", "email", "phone", "cv_filename", "cv_original_name",
+    "score", "score_label", "years_experience", "education_level",
+    "matching_skills", "summary", "strength", "weaknesses",
+    "full_analysis", "availability", "expected_salary", "specific_experience",
+}
+
 def _conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -35,9 +42,11 @@ def init_db():
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        conn.commit()
 
 def insert_candidate(**kwargs) -> int:
+    unknown = set(kwargs) - _CANDIDATE_FIELDS
+    if unknown:
+        raise ValueError(f"Unknown candidate fields: {unknown}")
     with _conn() as conn:
         cur = conn.execute("""
             INSERT INTO candidates (
@@ -52,7 +61,6 @@ def insert_candidate(**kwargs) -> int:
                 :full_analysis, :availability, :expected_salary, :specific_experience
             )
         """, kwargs)
-        conn.commit()
         return cur.lastrowid
 
 def get_all_candidates() -> list:
@@ -82,7 +90,9 @@ def get_stats() -> dict:
                    COUNT(CASE WHEN score < 5 THEN 1 END) as low_score
             FROM candidates
         """).fetchone()
-        return dict(row)
+        result = dict(row)
+        result["avg_score"] = result["avg_score"] or 0.0
+        return result
 
 def get_candidate(candidate_id: int) -> Optional[dict]:
     with _conn() as conn:
@@ -98,4 +108,3 @@ def get_candidate(candidate_id: int) -> Optional[dict]:
 def mark_email_sent(candidate_id: int):
     with _conn() as conn:
         conn.execute("UPDATE candidates SET email_sent = 1 WHERE id = ?", (candidate_id,))
-        conn.commit()
