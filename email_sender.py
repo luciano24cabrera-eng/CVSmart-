@@ -1,4 +1,5 @@
 import os, smtplib
+import html as _html
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -10,7 +11,10 @@ _BADGE = {
 
 def build_email_html(name: str, score_label: str, strength: str, weaknesses: list) -> str:
     color, bg = _BADGE.get(score_label, ("#374151", "#f3f4f6"))
-    wk_items = "".join(f"<li style='margin-bottom:6px'>{w}</li>" for w in weaknesses)
+    safe_name = _html.escape(name)
+    safe_strength = _html.escape(strength)
+    wk_items = "".join(f"<li style='margin-bottom:6px'>{_html.escape(w)}</li>" for w in weaknesses)
+    base_url = os.getenv("APP_BASE_URL", "http://localhost:8000")
     return f"""<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -21,7 +25,7 @@ def build_email_html(name: str, score_label: str, strength: str, weaknesses: lis
       <p style="color:rgba(255,255,255,.8);margin:8px 0 0">Sistema inteligente de filtrado de CVs</p>
     </div>
     <div style="padding:32px">
-      <p style="font-size:16px">Hola <strong>{name}</strong>,</p>
+      <p style="font-size:16px">Hola <strong>{safe_name}</strong>,</p>
       <p style="color:#4b5563">Recibimos tu CV y lo analizamos con nuestra IA. Aquí está tu retroalimentación personalizada:</p>
       <div style="margin:24px 0">
         <p style="font-weight:bold;color:#1F3864;margin-bottom:8px">Tu nivel de perfil:</p>
@@ -29,14 +33,14 @@ def build_email_html(name: str, score_label: str, strength: str, weaknesses: lis
       </div>
       <div style="margin:24px 0">
         <p style="font-weight:bold;color:#1F3864;margin-bottom:8px">Tu principal fortaleza:</p>
-        <p style="background:#F0F7FF;border-left:4px solid #2E75B6;padding:12px 16px;border-radius:0 8px 8px 0;margin:0">{strength}</p>
+        <p style="background:#F0F7FF;border-left:4px solid #2E75B6;padding:12px 16px;border-radius:0 8px 8px 0;margin:0">{safe_strength}</p>
       </div>
       <div style="margin:24px 0">
         <p style="font-weight:bold;color:#1F3864;margin-bottom:8px">Áreas de oportunidad:</p>
         <ul style="color:#4b5563;padding-left:20px">{wk_items}</ul>
       </div>
       <p style="color:#4b5563">¿Quieres un CV más profesional? Usa nuestro Creador de CV con IA:</p>
-      <a href="http://localhost:8000/crear-cv"
+      <a href="{base_url}/crear-cv"
          style="display:block;background:linear-gradient(135deg,#1F3864,#2E75B6);color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;text-align:center;font-weight:bold;margin:16px 0">
         Crear mi CV profesional →
       </a>
@@ -64,6 +68,6 @@ def send_feedback_email(to_email: str, name: str, score_label: str, strength: st
             server.login(gmail_user, gmail_password)
             server.sendmail(gmail_user, to_email, msg.as_string())
         return True
-    except Exception as e:
+    except (smtplib.SMTPException, OSError) as e:
         print(f"⚠️  Error enviando email a {to_email}: {e}")
         return False
