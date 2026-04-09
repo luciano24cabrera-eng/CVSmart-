@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Reclutador — CVSmart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --navy: #1F3864; --blue: #2E75B6; --accent: #4FC3F7; --bg: #F8FAFF; --gray: #64748b; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+          background: rgba(255,255,255,.9); backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(31,56,100,.08);
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 2rem; height: 64px; }
+    .nav-logo { font-weight: 800; font-size: 1.25rem; color: var(--navy); text-decoration: none; }
+    .nav-links { display: flex; gap: 1rem; }
+    .nav-links a { text-decoration: none; color: var(--gray); font-weight: 500; }
+
+    main { padding-top: 80px; max-width: 1200px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 4rem; }
+
+    /* LOGIN */
+    .login-wrap { min-height: calc(100vh - 80px); display: flex; align-items: center; justify-content: center; }
+    .login-card { background: rgba(255,255,255,.85); backdrop-filter: blur(12px);
+                  border-radius: 20px; box-shadow: 0 8px 32px rgba(31,56,100,.12);
+                  padding: 2.5rem; width: 100%; max-width: 400px; text-align: center; }
+    .login-card h2 { color: var(--navy); font-size: 1.5rem; margin-bottom: .5rem; }
+    .login-card p { color: var(--gray); margin-bottom: 1.5rem; }
+    input[type=password] { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0;
+                           border-radius: 10px; font-size: 1rem; font-family: inherit; margin-bottom: 1rem;
+                           transition: border-color .2s, box-shadow .2s; }
+    input[type=password]:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46,117,182,.15); }
+    .btn-primary { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--navy), var(--blue));
+                   color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+                   cursor: pointer; transition: transform .2s, box-shadow .2s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(31,56,100,.3); }
+    .error-msg { color: #ef4444; font-size: .9rem; margin-top: .5rem; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; }
+    .page-header { padding: 2rem 0 1.5rem; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; color: var(--navy); }
+    .page-header p { color: var(--gray); }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: rgba(255,255,255,.85); backdrop-filter: blur(12px);
+                 border-radius: 16px; box-shadow: 0 4px 16px rgba(31,56,100,.08);
+                 padding: 1.5rem; text-align: center; }
+    .stat-val { font-size: 2.5rem; font-weight: 800; color: var(--navy); }
+    .stat-label { font-size: .85rem; color: var(--gray); margin-top: 4px; }
+
+    /* TABLE */
+    .table-wrap { background: rgba(255,255,255,.85); backdrop-filter: blur(12px);
+                  border-radius: 20px; box-shadow: 0 8px 32px rgba(31,56,100,.12); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--navy); color: #fff; padding: 14px 16px; text-align: left; font-size: .85rem; font-weight: 600; }
+    tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .15s; }
+    tbody tr:hover { background: #f8faff; }
+    tbody td { padding: 14px 16px; font-size: .9rem; vertical-align: middle; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--blue));
+              color: #fff; display: flex; align-items: center; justify-content: center;
+              font-weight: 700; font-size: .85rem; flex-shrink: 0; }
+    .name-cell { display: flex; align-items: center; gap: 10px; }
+    .badge { padding: 4px 12px; border-radius: 99px; font-size: .8rem; font-weight: 700; }
+    .badge-green  { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .btn-detail { padding: 6px 14px; background: var(--blue); color: #fff; border: none;
+                  border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+    .btn-detail:hover { opacity: .85; }
+    .empty { text-align: center; padding: 3rem; color: var(--gray); }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+                     backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.2);
+             padding: 2rem; width: 100%; max-width: 620px; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.5rem; }
+    .modal-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--blue));
+                    color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    .modal-title h2 { font-size: 1.3rem; color: var(--navy); }
+    .modal-title p { color: var(--gray); font-size: .9rem; }
+    .modal-section { margin-bottom: 1.25rem; }
+    .modal-section h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em;
+                        color: var(--blue); font-weight: 700; margin-bottom: 8px; }
+    .modal-section p { color: #374151; font-size: .9rem; line-height: 1.6; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .skill-tag { padding: 4px 12px; background: #eff6ff; color: var(--blue); border-radius: 99px; font-size: .8rem; font-weight: 600; }
+    .modal-footer { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .btn-close { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; background: none;
+                 cursor: pointer; font-weight: 600; color: var(--gray); }
+    .btn-download { flex: 2; padding: 12px; background: linear-gradient(135deg, var(--navy), var(--blue));
+                    color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: .95rem; }
+    .answer-row { display: flex; justify-content: space-between; padding: 8px 0;
+                  border-bottom: 1px solid #f1f5f9; font-size: .9rem; }
+    .answer-row:last-child { border-bottom: none; }
+    .answer-row span:first-child { color: var(--gray); }
+    .answer-row span:last-child { font-weight: 600; color: #1e293b; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/">🧠 CVSmart</a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/panel">Panel</a>
+  </div>
+</nav>
+
+<main>
+  <!-- LOGIN -->
+  <div class="login-wrap" id="loginWrap">
+    <div class="login-card">
+      <div style="font-size:2.5rem; margin-bottom:1rem">🔒</div>
+      <h2>Panel Reclutador</h2>
+      <p>Ingresa la contraseña para acceder al dashboard</p>
+      <input type="password" id="passwordInput" placeholder="Contraseña" />
+      <button class="btn-primary" onclick="doLogin()">Acceder al panel</button>
+      <p class="error-msg" id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="page-header">
+      <h1>Panel de Reclutamiento</h1>
+      <p>Candidatos recibidos y analizados por IA</p>
+    </div>
+    <div class="stats" id="statsRow">
+      <div class="stat-card"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Total candidatos</div></div>
+      <div class="stat-card"><div class="stat-val" id="statAvg">—</div><div class="stat-label">Puntaje promedio</div></div>
+      <div class="stat-card"><div class="stat-val" id="statTop">—</div><div class="stat-label">Top candidatos (8+)</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidato</th><th>Puntaje</th><th>Nivel</th>
+            <th>Experiencia</th><th>Disponibilidad</th><th>Fecha</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-avatar" id="mAvatar"></div>
+      <div class="modal-title">
+        <h2 id="mName"></h2>
+        <p id="mEmail"></p>
+      </div>
+    </div>
+    <div class="modal-section">
+      <h4>Resumen ejecutivo</h4>
+      <p id="mSummary"></p>
+    </div>
+    <div class="modal-section">
+      <h4>Fortaleza principal</h4>
+      <p id="mStrength" style="color:#166534; background:#dcfce7; padding:10px 14px; border-radius:8px;"></p>
+    </div>
+    <div class="modal-section">
+      <h4>Áreas de oportunidad</h4>
+      <ul id="mWeaknesses" style="padding-left:1.2rem; color:#374151; font-size:.9rem; line-height:1.8;"></ul>
+    </div>
+    <div class="modal-section">
+      <h4>Habilidades coincidentes</h4>
+      <div class="skills-list" id="mSkills"></div>
+    </div>
+    <div class="modal-section">
+      <h4>Respuestas de filtro</h4>
+      <div id="mAnswers"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-close" onclick="closeModal()">Cerrar</button>
+      <button class="btn-download" id="mDownloadBtn">⬇️ Descargar CV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let AUTH = '';
+
+  async function doLogin() {
+    const pw = document.getElementById('passwordInput').value;
+    const res = await fetch('/api/panel/stats', { headers: { 'X-Recruiter-Password': pw } });
+    if (res.status === 401) {
+      document.getElementById('loginError').textContent = 'Contraseña incorrecta.';
+      return;
+    }
+    AUTH = pw;
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadDashboard();
+  }
+
+  document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  async function loadDashboard() {
+    const [statsRes, candsRes] = await Promise.all([
+      fetch('/api/panel/stats', { headers: { 'X-Recruiter-Password': AUTH } }),
+      fetch('/api/panel/candidatos', { headers: { 'X-Recruiter-Password': AUTH } }),
+    ]);
+    const stats = await statsRes.json();
+    const { candidates } = await candsRes.json();
+
+    document.getElementById('statTotal').textContent = stats.total ?? 0;
+    document.getElementById('statAvg').textContent = stats.avg_score ?? '—';
+    document.getElementById('statTop').textContent = stats.high_score ?? 0;
+
+    const tbody = document.getElementById('tableBody');
+    if (!candidates.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay candidatos aún</td></tr>';
+      return;
+    }
+    tbody.innerHTML = candidates.map(c => {
+      const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      const badgeCls = c.score >= 8 ? 'badge-green' : c.score >= 5 ? 'badge-yellow' : 'badge-red';
+      const date = new Date(c.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
+      return `<tr>
+        <td><div class="name-cell"><div class="avatar">${initials}</div>${c.name}</div></td>
+        <td><strong>${c.score}</strong></td>
+        <td><span class="badge ${badgeCls}">${c.score_label || ''}</span></td>
+        <td>${c.years_experience ?? '—'} años</td>
+        <td>${c.availability || '—'}</td>
+        <td>${date}</td>
+        <td><button class="btn-detail" onclick="openModal(${c.id})">Ver detalle</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function openModal(id) {
+    const res = await fetch(`/api/panel/candidatos/${id}`, { headers: { 'X-Recruiter-Password': AUTH } });
+    const c = await res.json();
+    const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    document.getElementById('mAvatar').textContent = initials;
+    document.getElementById('mName').textContent = c.name;
+    document.getElementById('mEmail').textContent = c.email || 'Sin email';
+    document.getElementById('mSummary').textContent = c.summary || '—';
+    document.getElementById('mStrength').textContent = c.strength || '—';
+    const wk = document.getElementById('mWeaknesses');
+    wk.innerHTML = (c.weaknesses || []).map(w => `<li>${w}</li>`).join('') || '<li>—</li>';
+    const sk = document.getElementById('mSkills');
+    sk.innerHTML = (c.matching_skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('') || '<span style="color:var(--gray)">—</span>';
+    document.getElementById('mAnswers').innerHTML = `
+      <div class="answer-row"><span>Disponibilidad</span><span>${c.availability || '—'}</span></div>
+      <div class="answer-row"><span>Sueldo esperado</span><span>${c.expected_salary || '—'}</span></div>
+      <div class="answer-row"><span>Años de experiencia</span><span>${c.specific_experience || '—'}</span></div>`;
+    document.getElementById('mDownloadBtn').onclick = () => {
+      window.open(`/api/panel/candidatos/${id}/cv?x_recruiter_password=${AUTH}`, '_blank');
+    };
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+  document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+</script>
+</body>
+</html>
