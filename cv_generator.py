@@ -1,18 +1,21 @@
 import os, re, json, io
+import threading
 from groq import Groq
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 
 _client = None
+_client_lock = threading.Lock()
 
 def _get_client() -> Groq:
     global _client
     if _client is None:
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        with _client_lock:
+            if _client is None:
+                _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     return _client
 
 IMPROVE_PROMPT = """Eres un experto en recursos humanos y redacción de CVs profesionales en México.
