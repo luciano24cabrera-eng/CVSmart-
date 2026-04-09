@@ -1,4 +1,6 @@
-import os, json, time
+import os, json
+import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Body, Header
 from fastapi.responses import StreamingResponse, FileResponse
@@ -11,11 +13,16 @@ from analyzer import analyze_cv
 from email_sender import send_feedback_email
 from cv_generator import improve_cv_with_ai, generate_cv_pdf
 
-app = FastAPI(title="CVSmart V2")
-
 CVS_DIR = Path("cvs")
-CVS_DIR.mkdir(exist_ok=True)
-init_db()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # load_dotenv() must run before env vars are read — already done at module top
+    CVS_DIR.mkdir(exist_ok=True)
+    init_db()
+    yield
+
+app = FastAPI(title="CVSmart V2", lifespan=lifespan)
 
 # ── Auth ──────────────────────────────────────────────────────────────
 def require_auth(x_recruiter_password: str = Header(None)):
@@ -44,7 +51,7 @@ async def aplicar(
     except Exception as e:
         raise HTTPException(503, f"Error al analizar CV: {e}")
 
-    filename = f"cv-{int(time.time())}-{cv.filename}"
+    filename = f"cv-{uuid.uuid4().hex}-{cv.filename}"
     (CVS_DIR / filename).write_bytes(pdf_bytes)
 
     cid = insert_candidate(
@@ -79,7 +86,7 @@ async def aplicar(
     return {
         "success": True,
         "candidateId": cid,
-        "name": analysis.get("nombre"),
+        "name": analysis.get("nombre", "Sin nombre"),
         "message": "Tu postulación fue recibida. Recibirás un correo con retroalimentación.",
     }
 
@@ -114,9 +121,9 @@ def panel_cv(cid: int, _=Depends(require_auth)):
 async def generar_cv(cv_data: dict = Body(...)):
     try:
         improved = improve_cv_with_ai(cv_data)
+        pdf_bytes = generate_cv_pdf(improved)
     except Exception as e:
         raise HTTPException(503, f"Error al generar CV: {e}")
-    pdf_bytes = generate_cv_pdf(improved)
     name = improved.get("nombre", "CV").replace(" ", "_")
     return StreamingResponse(
         iter([pdf_bytes]),
