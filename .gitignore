@@ -3,3 +3,12 @@ node_modules/
 uploads/
 *.db
 *.sqlite
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.db-shm
+*.db-wal
+cvs/
+package.json
+package-lock.json
