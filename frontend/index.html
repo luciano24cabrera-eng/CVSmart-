@@ -4,86 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CVSmart — Filtrado Inteligente de CVs con IA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./styles/theme.css" />
+  <link rel="stylesheet" href="./styles/components.css" />
+  <link rel="stylesheet" href="./styles/animations.css" />
+
+  <!-- Hero Section Styles -->
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --navy: #1F3864; --blue: #2E75B6; --accent: #4FC3F7;
-      --bg: #F8FAFF; --white: #ffffff; --gray: #64748b; --border: rgba(255,255,255,.3);
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 2rem 4rem;
+      background-color: var(--color-bg-primary);
+      position: relative;
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; }
 
-    /* NAV */
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-          background: rgba(255,255,255,.9); backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(31,56,100,.08);
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 2rem; height: 64px; }
-    .nav-logo { font-weight: 800; font-size: 1.25rem; color: var(--navy); text-decoration: none; }
-    .nav-links { display: flex; gap: 1rem; align-items: center; }
-    .nav-links a { text-decoration: none; color: var(--gray); font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: var(--navy); }
-    .nav-links .btn-nav { background: linear-gradient(135deg, var(--navy), var(--blue));
-                          color: #fff !important; padding: 8px 20px; border-radius: 10px; }
+    .hero::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2px;
+      height: 40%;
+      background-color: var(--color-accent);
+      opacity: 0.2;
+    }
 
-    /* HERO */
-    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; padding: 120px 2rem 4rem;
-            background: linear-gradient(135deg, #0f1f3d 0%, #1F3864 50%, #2E75B6 100%); }
-    .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; color: #fff;
-               line-height: 1.1; margin-bottom: 1.5rem; }
-    .hero h1 span { color: var(--accent); }
-    .hero p { font-size: 1.2rem; color: rgba(255,255,255,.8); max-width: 600px; margin-bottom: 2.5rem; }
-    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px;
-           border-radius: 12px; font-weight: 600; font-size: 1rem; text-decoration: none;
-           transition: transform .2s, box-shadow .2s; }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-white { background: #fff; color: var(--navy); box-shadow: 0 4px 20px rgba(0,0,0,.15); }
-    .btn-white:hover { box-shadow: 0 8px 32px rgba(0,0,0,.2); }
-    .btn-outline { border: 2px solid rgba(255,255,255,.5); color: #fff; }
-    .btn-outline:hover { background: rgba(255,255,255,.1); }
-    .btn-primary { background: linear-gradient(135deg, var(--navy), var(--blue)); color: #fff;
-                   box-shadow: 0 4px 20px rgba(31,56,100,.3); }
-    .btn-primary:hover { box-shadow: 0 8px 32px rgba(31,56,100,.4); }
+    .hero h1 {
+      margin-bottom: 1.5rem;
+    }
 
-    /* SECCIONES */
-    section { padding: 5rem 2rem; }
-    .container { max-width: 1100px; margin: 0 auto; }
-    .section-title { font-size: 2rem; font-weight: 800; color: var(--navy); text-align: center; margin-bottom: .75rem; }
-    .section-sub { text-align: center; color: var(--gray); font-size: 1.1rem; margin-bottom: 3rem; }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--color-text-secondary);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+    }
 
-    /* GLASS CARD */
-    .glass { background: rgba(255,255,255,.85); backdrop-filter: blur(12px);
-             border: 1px solid rgba(255,255,255,.3); border-radius: 20px;
-             box-shadow: 0 8px 32px rgba(31,56,100,.12); padding: 2rem; }
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
-    /* HOW IT WORKS */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
-    .step { text-align: center; }
-    .step-num { width: 60px; height: 60px; background: linear-gradient(135deg, var(--navy), var(--blue));
-                color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                font-size: 1.5rem; font-weight: 800; margin: 0 auto 1rem; }
-    .step h3 { font-size: 1.1rem; color: var(--navy); margin-bottom: .5rem; }
-    .step p { color: var(--gray); font-size: .95rem; }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-    /* FEATURES */
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
-    .feature { text-align: center; }
-    .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    .feature h3 { font-size: 1.1rem; color: var(--navy); margin-bottom: .5rem; }
-    .feature p { color: var(--gray); font-size: .9rem; }
+    section {
+      padding: var(--spacing-2xl) var(--spacing-lg);
+    }
 
-    /* FOOTER */
-    footer { background: var(--navy); color: rgba(255,255,255,.6); text-align: center; padding: 2rem; font-size: .9rem; }
-    footer strong { color: var(--accent); }
+    .section-title {
+      font-size: 2rem;
+      font-weight: var(--fw-extra-bold);
+      color: var(--color-text-primary);
+      text-align: center;
+      margin-bottom: 0.75rem;
+    }
 
-    /* FADE IN */
-    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
-    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .section-sub {
+      text-align: center;
+      color: var(--color-text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature {
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
 
     @media (max-width: 640px) {
-      .nav-links a:not(.btn-nav) { display: none; }
+      .hero {
+        padding: 80px 1rem 3rem;
+      }
+      .hero-btns {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -102,32 +133,36 @@
 
 <!-- HERO -->
 <section class="hero">
-  <h1>Filtra CVs con<br><span>Inteligencia Artificial</span></h1>
-  <p>CVSmart analiza cada candidato, lo puntúa del 1 al 10 y entrega al reclutador una lista priorizada lista para tomar decisiones.</p>
-  <div class="hero-btns">
-    <a href="/aplicar" class="btn btn-white">📄 Subir mi CV</a>
-    <a href="/panel" class="btn btn-outline">🔒 Panel Reclutador</a>
+  <div class="container">
+    <h1>Filtra CVs con<br><span style="color: var(--color-accent);">Inteligencia Artificial</span></h1>
+    <p>CVSmart analiza cada candidato, lo puntúa del 1 al 10 y entrega al reclutador una lista priorizada lista para tomar decisiones.</p>
+    <div class="hero-btns">
+      <a href="/aplicar" class="btn btn-primary">📄 Subir mi CV</a>
+      <a href="/crear-cv" class="btn btn-secondary">✨ Crear CV con IA</a>
+      <a href="/panel" class="btn btn-tertiary">🔒 Panel Reclutador</a>
+    </div>
   </div>
 </section>
 
 <!-- CÓMO FUNCIONA -->
-<section style="background: var(--white);">
+<section style="background-color: var(--color-bg-secondary);">
   <div class="container">
+    <div class="line-top"></div>
     <h2 class="section-title fade-in">¿Cómo funciona?</h2>
     <p class="section-sub fade-in">Tres pasos del CV al ranking</p>
-    <div class="steps">
-      <div class="glass step fade-in">
-        <div class="step-num">1</div>
+    <div class="steps fade-in-container">
+      <div class="card step fade-in">
+        <div class="step-number">1</div>
         <h3>El candidato sube su CV</h3>
         <p>Sube su PDF en el formulario web y responde las 3 preguntas de filtro en segundos.</p>
       </div>
-      <div class="glass step fade-in">
-        <div class="step-num">2</div>
+      <div class="card step fade-in">
+        <div class="step-number">2</div>
         <h3>IA analiza el perfil</h3>
         <p>Groq extrae el texto, evalúa el perfil y genera un puntaje del 1 al 10 con fortalezas y áreas de mejora.</p>
       </div>
-      <div class="glass step fade-in">
-        <div class="step-num">3</div>
+      <div class="card step fade-in">
+        <div class="step-number">3</div>
         <h3>Reclutador decide</h3>
         <p>Ve el ranking, revisa resúmenes y descarga los CVs de los mejores perfiles desde el panel.</p>
       </div>
@@ -138,25 +173,26 @@
 <!-- BENEFICIOS -->
 <section>
   <div class="container">
+    <div class="line-top"></div>
     <h2 class="section-title fade-in">Todo lo que necesitas</h2>
     <p class="section-sub fade-in">Una plataforma completa para reclutamiento inteligente</p>
-    <div class="features">
-      <div class="glass feature fade-in">
+    <div class="features fade-in-container">
+      <div class="card feature fade-in">
         <div class="feature-icon">📤</div>
         <h3>Recepción por formulario web</h3>
         <p>Los candidatos suben su CV directamente desde esta plataforma. Sin correos ni carpetas desordenadas.</p>
       </div>
-      <div class="glass feature fade-in">
+      <div class="card feature fade-in">
         <div class="feature-icon">🤖</div>
         <h3>Análisis con IA</h3>
         <p>Groq analiza cada CV evaluando experiencia, estudios y habilidades relevantes para el puesto.</p>
       </div>
-      <div class="glass feature fade-in">
+      <div class="card feature fade-in">
         <div class="feature-icon">📧</div>
         <h3>Retroalimentación automática</h3>
         <p>Cada candidato recibe un correo con su nivel de perfil, fortaleza y áreas de oportunidad.</p>
       </div>
-      <div class="glass feature fade-in">
+      <div class="card feature fade-in">
         <div class="feature-icon">📝</div>
         <h3>Creador de CV con IA</h3>
         <p>Los candidatos pueden generar un CV profesional con ayuda de IA y descargarlo como PDF.</p>
@@ -166,14 +202,16 @@
 </section>
 
 <!-- CTA -->
-<section style="background: linear-gradient(135deg, var(--navy), var(--blue)); text-align: center;">
-  <h2 style="color:#fff; font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">¿Listo para empezar?</h2>
-  <p style="color: rgba(255,255,255,.8); margin-bottom: 2rem;">Sube tu CV ahora y recibe retroalimentación personalizada con IA.</p>
-  <a href="/aplicar" class="btn btn-white">📄 Subir mi CV ahora</a>
+<section style="background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary)); text-align: center;">
+  <div class="container">
+    <h2 style="color: var(--color-text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">¿Listo para empezar?</h2>
+    <p style="color: var(--color-text-secondary); margin-bottom: 2rem;">Sube tu CV ahora y recibe retroalimentación personalizada con IA.</p>
+    <a href="/aplicar" class="btn btn-primary">📄 Subir mi CV ahora</a>
+  </div>
 </section>
 
-<footer>
-  <p>CVSmart &copy; 2026 — Potenciado por <strong>Groq AI</strong></p>
+<footer style="background-color: var(--color-bg-primary); color: var(--color-text-secondary); text-align: center; padding: 2rem; font-size: 0.9rem; border-top: 1px solid var(--color-border-light);">
+  <p>CVSmart &copy; 2026 — Potenciado por <strong style="color: var(--color-accent);">Groq AI</strong></p>
 </footer>
 
 <script>
