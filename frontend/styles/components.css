@@ -1,0 +1,178 @@
+/* frontend/styles/components.css */
+
+/* NAVIGATION */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  height: 64px;
+}
+
+.nav-logo {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-extra-bold);
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.nav-links a {
+  font-weight: var(--fw-semi-bold);
+  color: var(--color-text-secondary);
+  transition: color var(--transition-normal);
+}
+
+.nav-links a:hover {
+  color: var(--color-accent);
+}
+
+.nav-links a:focus {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.btn-nav {
+  background-color: var(--color-accent) !important;
+  color: var(--color-text-primary) !important;
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+}
+
+.btn-nav:hover {
+  box-shadow: 0 4px 12px var(--color-shadow-red);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .nav-links a:not(.btn-nav) {
+    display: none;
+  }
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--fw-semi-bold);
+  font-size: 1rem;
+  transition: all var(--transition-normal);
+}
+
+.btn:focus {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-text-primary);
+  box-shadow: 0 4px 20px var(--color-shadow-red);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 32px rgba(228, 60, 47, 0.25);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  border: 2px solid var(--color-accent);
+  background-color: transparent;
+  color: var(--color-text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(228, 60, 47, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-tertiary {
+  border: 2px solid var(--color-text-secondary);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn-tertiary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+/* CARDS */
+.card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-normal);
+}
+
+.card:hover {
+  border-color: var(--color-border-full);
+  box-shadow: 0 4px 16px var(--color-shadow-red);
+  transform: scale(1.02);
+}
+
+.card h3 {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-bold);
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+}
+
+.card p {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* STEP NUMBER BADGE */
+.step-number {
+  width: 60px;
+  height: 60px;
+  background-color: var(--color-accent);
+  color: var(--color-text-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: var(--fw-extra-bold);
+  margin: 0 auto var(--spacing-md);
+  font-family: var(--font-heading);
+}
+
+/* DECORATIVE LINES */
+.line-top {
+  height: 2px;
+  background-color: var(--color-accent);
+  width: 100%;
+  opacity: 1;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.line-decorative {
+  height: 2px;
+  background-color: var(--color-accent);
+  width: 100%;
+  opacity: 0.2;
+  margin-bottom: var(--spacing-xl);
+}
