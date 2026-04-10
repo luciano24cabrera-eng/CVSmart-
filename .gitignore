@@ -12,3 +12,4 @@ __pycache__/
 cvs/
 package.json
 package-lock.json
+.worktrees/
