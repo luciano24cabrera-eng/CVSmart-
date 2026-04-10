@@ -1,0 +1,72 @@
+/* frontend/styles/animations.css */
+
+/* FADE-IN ANIMATION */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp var(--transition-slow) ease forwards;
+}
+
+/* STAGGER EFFECT: Children fade in with delay */
+.fade-in-container > * {
+  opacity: 0;
+  animation: fadeInUp var(--transition-slow) ease forwards;
+}
+
+.fade-in-container > :nth-child(1) { animation-delay: 0s; }
+.fade-in-container > :nth-child(2) { animation-delay: 0.1s; }
+.fade-in-container > :nth-child(3) { animation-delay: 0.2s; }
+.fade-in-container > :nth-child(4) { animation-delay: 0.3s; }
+.fade-in-container > :nth-child(5) { animation-delay: 0.4s; }
+
+/* BUTTON HOVER ELEVATION */
+@keyframes buttonHover {
+  to {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(228, 60, 47, 0.25);
+  }
+}
+
+/* CARD SCALE ON HOVER */
+@keyframes cardHover {
+  to {
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(228, 60, 47, 0.15);
+  }
+}
+
+/* LINK UNDERLINE ANIMATION */
+@keyframes linkUnderline {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* INTERSECTION OBSERVER FOR LAZY ANIMATION */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* SMOOTH SCROLL BEHAVIOR */
+html {
+  scroll-behavior: smooth;
+}
