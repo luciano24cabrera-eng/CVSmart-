@@ -11,6 +11,14 @@
   --color-border-full: rgba(228, 60, 47, 1);
   --color-shadow-red: rgba(228, 60, 47, 0.15);
 
+  /* Glass / Glow */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 12px;
+  --glass-hover-border: rgba(228, 60, 47, 0.25);
+  --glass-hover-shadow: 0 8px 32px rgba(228, 60, 47, 0.12);
+  --glow-red-soft: rgba(228, 60, 47, 0.15);
+
   /* Typography */
   --font-heading: 'Poppins', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -84,14 +92,25 @@ button, [role="button"] {
   font-weight: var(--fw-semi-bold);
 }
 
-/* Utility: fade-in animation */
-.fade-in {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity var(--transition-slow), transform var(--transition-slow);
+/* fade-in styles are in animations.css */
+
+/* Selection */
+::selection {
+  background: rgba(228, 60, 47, 0.3);
+  color: #fff;
 }
 
-.fade-in.visible {
-  opacity: 1;
-  transform: translateY(0);
+/* Global focus */
+*:focus-visible {
+  outline: 2px solid rgba(228, 60, 47, 0.5);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Global link hover */
+a {
+  transition: color var(--transition-normal);
+}
+a:hover {
+  color: var(--color-accent);
 }
