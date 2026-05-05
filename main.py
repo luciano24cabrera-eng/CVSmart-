@@ -1,12 +1,11 @@
-import os, json
+import os, json, re
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Body, Header
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -40,10 +39,31 @@ def require_auth(x_recruiter_password: str = Header(None)):
 class AceptarBody(BaseModel):
     fecha_inicio: str
 
+    @field_validator("fecha_inicio")
+    @classmethod
+    def validate_fecha_inicio(cls, v: str) -> str:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            raise ValueError("fecha_inicio must be YYYY-MM-DD")
+        return v
+
 class AgendarBody(BaseModel):
     fecha_cita: str
     hora_cita: str
-    notas: Optional[str] = ""
+    notas: str = ""
+
+    @field_validator("fecha_cita")
+    @classmethod
+    def validate_fecha_cita(cls, v: str) -> str:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            raise ValueError("fecha_cita must be YYYY-MM-DD")
+        return v
+
+    @field_validator("hora_cita")
+    @classmethod
+    def validate_hora_cita(cls, v: str) -> str:
+        if not re.fullmatch(r"\d{2}:\d{2}", v):
+            raise ValueError("hora_cita must be HH:MM")
+        return v
 
 # ── Candidatos ────────────────────────────────────────────────────────
 @app.post("/api/aplicar")
@@ -138,7 +158,9 @@ def candidato_aceptar(cid: int, body: AceptarBody, _=Depends(require_auth)):
     c = get_candidate(cid)
     if not c:
         raise HTTPException(404, "Candidato no encontrado")
-    update_candidate_estado(cid, "aceptado", fecha_inicio=body.fecha_inicio)
+    updated = update_candidate_estado(cid, "aceptado", fecha_inicio=body.fecha_inicio)
+    if not updated:
+        raise HTTPException(404, "Candidato no encontrado")
     sent, warning = False, None
     if c.get("email"):
         sent = send_action_email(c["email"], c["name"], "aceptado", fecha_inicio=body.fecha_inicio)
@@ -151,11 +173,13 @@ def candidato_agendar(cid: int, body: AgendarBody, _=Depends(require_auth)):
     c = get_candidate(cid)
     if not c:
         raise HTTPException(404, "Candidato no encontrado")
-    update_candidate_estado(
+    updated = update_candidate_estado(
         cid, "agendado",
         fecha_cita=body.fecha_cita, hora_cita=body.hora_cita,
         notas_cita=body.notas or ""
     )
+    if not updated:
+        raise HTTPException(404, "Candidato no encontrado")
     sent, warning = False, None
     if c.get("email"):
         sent = send_action_email(
@@ -171,7 +195,9 @@ def candidato_rechazar(cid: int, _=Depends(require_auth)):
     c = get_candidate(cid)
     if not c:
         raise HTTPException(404, "Candidato no encontrado")
-    update_candidate_estado(cid, "rechazado")
+    updated = update_candidate_estado(cid, "rechazado")
+    if not updated:
+        raise HTTPException(404, "Candidato no encontrado")
     sent, warning = False, None
     if c.get("email"):
         sent = send_action_email(c["email"], c["name"], "rechazado")

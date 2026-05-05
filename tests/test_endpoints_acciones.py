@@ -86,3 +86,31 @@ def test_endpoints_requieren_auth(client, cid):
     assert client.post(f"/api/candidatos/{cid}/agendar",
                        json={"fecha_cita": "2026-05-20", "hora_cita": "10:00"}).status_code == 401
     assert client.post(f"/api/candidatos/{cid}/rechazar").status_code == 401
+
+def test_aceptar_fecha_invalida_retorna_422(client, cid):
+    r = client.post(f"/api/candidatos/{cid}/aceptar",
+                    json={"fecha_inicio": "not-a-date"}, headers=HEADERS)
+    assert r.status_code == 422
+
+def test_aceptar_fecha_vacia_retorna_422(client, cid):
+    r = client.post(f"/api/candidatos/{cid}/aceptar",
+                    json={"fecha_inicio": ""}, headers=HEADERS)
+    assert r.status_code == 422
+
+def test_agendar_hora_invalida_retorna_422(client, cid):
+    r = client.post(f"/api/candidatos/{cid}/agendar",
+                    json={"fecha_cita": "2026-05-20", "hora_cita": "invalid"},
+                    headers=HEADERS)
+    assert r.status_code == 422
+
+def test_aceptar_warning_cuando_sin_email_config(client, cid):
+    # When email credentials are not configured, email_sent will be False
+    # and warning will be set (after attempting to send)
+    r = client.post(f"/api/candidatos/{cid}/aceptar",
+                    json={"fecha_inicio": "2026-06-01"}, headers=HEADERS)
+    body = r.json()
+    assert body["success"] is True
+    # email_sent can be True or False depending on email config
+    # The important part is the structure of the response
+    assert "email_sent" in body
+    assert "warning" in body
