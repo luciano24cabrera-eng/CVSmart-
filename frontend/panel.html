@@ -1730,15 +1730,20 @@
   async function confirmAceptar() {
     const fecha = document.getElementById('smFechaInicio').value;
     if (!fecha) { document.getElementById('smFechaInicio').focus(); return; }
-    document.querySelector('#submodalAceptar .btn-sm-confirm').disabled = true;
-    closeSubModal('aceptar');
+    const btn = document.querySelector('#submodalAceptar .btn-sm-confirm');
+    btn.disabled = true;
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/aceptar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
       body: JSON.stringify({ fecha_inicio: fecha })
     });
     const data = r.ok ? await r.json() : {};
-    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    if (!r.ok) {
+      btn.disabled = false;
+      showToast('Error al procesar la acción', 'error');
+      return;
+    }
+    closeSubModal('aceptar');
     _postAction('aceptado');
     showToast(data.email_sent ? '✓ Candidato aceptado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
   }
@@ -1749,28 +1754,38 @@
     if (!fecha) { document.getElementById('smFechaCita').focus(); return; }
     if (!hora)  { document.getElementById('smHoraCita').focus();  return; }
     const notas = document.getElementById('smNotas').value;
-    document.querySelector('#submodalAgendar .btn-sm-confirm').disabled = true;
-    closeSubModal('agendar');
+    const btn = document.querySelector('#submodalAgendar .btn-sm-confirm');
+    btn.disabled = true;
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/agendar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
       body: JSON.stringify({ fecha_cita: fecha, hora_cita: hora, notas })
     });
     const data = r.ok ? await r.json() : {};
-    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    if (!r.ok) {
+      btn.disabled = false;
+      showToast('Error al procesar la acción', 'error');
+      return;
+    }
+    closeSubModal('agendar');
     _postAction('agendado');
     showToast(data.email_sent ? '✓ Cita agendada. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
   }
 
   async function confirmRechazar() {
-    document.querySelector('#submodalRechazar .btn-sm-confirm').disabled = true;
-    closeSubModal('rechazar');
+    const btn = document.querySelector('#submodalRechazar .btn-sm-confirm');
+    btn.disabled = true;
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/rechazar`, {
       method: 'POST',
       headers: { 'X-Recruiter-Password': AUTH }
     });
     const data = r.ok ? await r.json() : {};
-    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    if (!r.ok) {
+      btn.disabled = false;
+      showToast('Error al procesar la acción', 'error');
+      return;
+    }
+    closeSubModal('rechazar');
     _postAction('rechazado');
     showToast(data.email_sent ? '✓ Candidato rechazado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
   }
