@@ -1,7 +1,7 @@
 import os, pytest
 os.environ.setdefault("GOOGLE_API_KEY", "test")
 
-from database import init_db, insert_candidate, get_all_candidates, get_stats, get_candidate, mark_email_sent
+from database import init_db, insert_candidate, get_all_candidates, get_stats, get_candidate, mark_email_sent, update_candidate_estado
 import database, sqlite3
 from pathlib import Path
 
@@ -84,8 +84,6 @@ def test_get_stats_empty():
     assert stats["total"] == 0
     assert stats["avg_score"] == 0.0
 
-from database import update_candidate_estado
-
 def _make_candidate():
     return insert_candidate(
         name="Test User", email="t@test.com", phone="", cv_filename="t.pdf",
@@ -136,3 +134,8 @@ def test_get_all_candidates_includes_estado():
     _make_candidate()
     candidates = get_all_candidates()
     assert "estado" in candidates[0]
+
+def test_update_candidate_estado_invalid_estado():
+    cid = _make_candidate()
+    with pytest.raises(ValueError, match="Invalid estado"):
+        update_candidate_estado(cid, "invalid_state")

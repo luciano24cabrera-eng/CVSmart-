@@ -19,6 +19,8 @@ _NEW_COLS = [
     ("notas_cita",   "TEXT"),
 ]
 
+_VALID_ESTADOS = {"pendiente", "aceptado", "agendado", "rechazado"}
+
 def _conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -28,8 +30,9 @@ def _migrate(conn):
     for col, col_def in _NEW_COLS:
         try:
             conn.execute(f"ALTER TABLE candidates ADD COLUMN {col} {col_def}")
-        except sqlite3.OperationalError:
-            pass  # column already exists
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" not in str(e):
+                raise
 
 def init_db():
     with _conn() as conn:
@@ -126,6 +129,8 @@ def mark_email_sent(candidate_id: int):
         conn.execute("UPDATE candidates SET email_sent = 1 WHERE id = ?", (candidate_id,))
 
 def update_candidate_estado(candidate_id: int, estado: str, **extra_fields) -> bool:
+    if estado not in _VALID_ESTADOS:
+        raise ValueError(f"Invalid estado: {estado!r}. Must be one of {_VALID_ESTADOS}")
     allowed = {"fecha_inicio", "fecha_cita", "hora_cita", "notas_cita"}
     unknown = set(extra_fields) - allowed
     if unknown:
