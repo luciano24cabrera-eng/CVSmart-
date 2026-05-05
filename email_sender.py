@@ -12,6 +12,27 @@ _BADGE = {
 _WRAPPER_STYLE = "max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(31,56,100,.1)"
 _HEADER_STYLE  = "background:linear-gradient(135deg,#1F3864,#2E75B6);padding:32px;text-align:center"
 
+def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Send HTML email via Gmail SMTP."""
+    gmail_user     = os.getenv("GMAIL_USER")
+    gmail_password = os.getenv("GMAIL_APP_PASSWORD")
+    if not gmail_user or not gmail_password:
+        print("⚠️  Email no enviado: GMAIL_USER o GMAIL_APP_PASSWORD no configurados en .env")
+        return False
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = gmail_user
+    msg["To"]      = to_email
+    msg.attach(MIMEText(html_body, "html"))
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(gmail_user, gmail_password)
+            server.sendmail(gmail_user, to_email, msg.as_string())
+        return True
+    except (smtplib.SMTPException, OSError) as e:
+        print(f"⚠️  Error enviando email a {to_email}: {e}")
+        return False
+
 def _email_wrapper(body_html: str) -> str:
     return f"""<!DOCTYPE html>
 <html lang="es">
@@ -125,41 +146,9 @@ def send_action_email(to_email: str, name: str, action: str, **kwargs) -> bool:
     if action not in builders:
         return False
     subject, html = builders[action]()
-    gmail_user     = os.getenv("GMAIL_USER")
-    gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-    if not gmail_user or not gmail_password:
-        print("⚠️  Email no enviado: GMAIL_USER o GMAIL_APP_PASSWORD no configurados en .env")
-        return False
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"]    = gmail_user
-    msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(gmail_user, gmail_password)
-            server.sendmail(gmail_user, to_email, msg.as_string())
-        return True
-    except (smtplib.SMTPException, OSError) as e:
-        print(f"⚠️  Error enviando email a {to_email}: {e}")
-        return False
+    return _send_html_email(to_email, subject, html)
 
 def send_feedback_email(to_email: str, name: str, score_label: str, strength: str, weaknesses: list) -> bool:
-    gmail_user     = os.getenv("GMAIL_USER")
-    gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-    if not gmail_user or not gmail_password:
-        print("⚠️  Email no enviado: GMAIL_USER o GMAIL_APP_PASSWORD no configurados en .env")
-        return False
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "CVSmart — Recibimos tu CV, aquí está tu retroalimentación"
-    msg["From"]    = gmail_user
-    msg["To"]      = to_email
-    msg.attach(MIMEText(build_email_html(name, score_label, strength, weaknesses), "html"))
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(gmail_user, gmail_password)
-            server.sendmail(gmail_user, to_email, msg.as_string())
-        return True
-    except (smtplib.SMTPException, OSError) as e:
-        print(f"⚠️  Error enviando email a {to_email}: {e}")
-        return False
+    subject = "CVSmart — Recibimos tu CV, aquí está tu retroalimentación"
+    html_body = build_email_html(name, score_label, strength, weaknesses)
+    return _send_html_email(to_email, subject, html_body)

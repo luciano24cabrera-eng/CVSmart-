@@ -38,9 +38,9 @@ def test_send_action_email_sin_credenciales_retorna_false(monkeypatch):
     monkeypatch.delenv("GMAIL_APP_PASSWORD", raising=False)
     assert send_action_email("x@test.com", "Test", "aceptado", fecha_inicio="2026-06-01") is False
 
-def test_send_action_email_accion_invalida(monkeypatch):
-    monkeypatch.delenv("GMAIL_USER", raising=False)
-    assert send_action_email("x@test.com", "Test", "invalida") is False
+def test_send_action_email_accion_invalida():
+    result = send_action_email("x@test.com", "Test", "invalida")
+    assert result is False
 
 def test_html_escapa_caracteres_especiales():
     html = _build_aceptado_html('<script>alert(1)</script>', "Acme", "2026-06-01")
