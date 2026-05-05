@@ -1290,6 +1290,7 @@
         <div class="modal-title">
           <h2 id="mName"></h2>
           <p id="mEmail"></p>
+          <p id="mEstadoBadge" style="margin-top:6px"></p>
         </div>
         <div class="modal-score-ring" id="mScoreRing"></div>
       </div>
@@ -1358,6 +1359,19 @@
 
   let _cachedCandidates = [];
   let _cachedStats = {};
+  let _currentCandidateId = null;
+  let _currentCandidateName = '';
+
+  function updateActionButtons(estado) {
+    const isActioned = estado !== 'pendiente';
+    ['.action-approve', '.action-schedule', '.action-discard'].forEach(sel => {
+      const btn = document.querySelector(sel);
+      if (!btn) return;
+      btn.disabled = isActioned;
+      btn.style.opacity = isActioned ? '0.35' : '1';
+      btn.style.cursor  = isActioned ? 'not-allowed' : 'pointer';
+    });
+  }
 
   // Map section IDs to breadcrumb labels
   const SECTION_LABELS = {
@@ -1590,6 +1604,10 @@
   async function openModal(id) {
     const res = await fetch(`/api/panel/candidatos/${id}`, { headers: { 'X-Recruiter-Password': AUTH } });
     const c   = await res.json();
+
+    _currentCandidateId   = id;
+    _currentCandidateName = c.name;
+
     const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const score    = parseFloat(c.score) || 0;
     const pct      = Math.min(score / 10, 1);
@@ -1600,6 +1618,7 @@
     document.getElementById('mAvatar').textContent      = initials;
     document.getElementById('mName').textContent        = c.name;
     document.getElementById('mEmail').textContent       = c.email || 'Sin email';
+    document.getElementById('mEstadoBadge').innerHTML   = renderEstadoBadge(c.estado || 'pendiente');
     document.getElementById('mSummary').textContent     = c.summary || '—';
     document.getElementById('mStrength').textContent    = c.strength || '—';
     document.getElementById('mScoreBarFill').style.width = (pct * 100) + '%';
@@ -1626,6 +1645,16 @@
       <div class="answer-row"><span>Años de experiencia</span><span>${esc(c.specific_experience || '—')}</span></div>`;
 
     document.getElementById('mDownloadBtn').onclick = () => downloadCV(id);
+
+    // Wire action buttons
+    const estado = c.estado || 'pendiente';
+    updateActionButtons(estado);
+    if (estado === 'pendiente') {
+      document.querySelector('.action-approve').onclick  = () => openSubModal('aceptar');
+      document.querySelector('.action-schedule').onclick = () => openSubModal('agendar');
+      document.querySelector('.action-discard').onclick  = () => openSubModal('rechazar');
+    }
+
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -1638,8 +1667,163 @@
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.submodal-overlay.open').forEach(o => o.classList.remove('open'));
+      closeModal();
+    }
+  });
+
+  // ── Sub-modales ────────────────────────────────────────────────────
+  function openSubModal(action) {
+    if (action === 'aceptar') {
+      document.getElementById('smAceptarName').textContent = _currentCandidateName;
+      document.getElementById('smFechaInicio').value = '';
+      document.getElementById('submodalAceptar').classList.add('open');
+    } else if (action === 'agendar') {
+      document.getElementById('smAgendarName').textContent = _currentCandidateName;
+      document.getElementById('smFechaCita').value = '';
+      document.getElementById('smHoraCita').value = '';
+      document.getElementById('smNotas').value = '';
+      document.getElementById('submodalAgendar').classList.add('open');
+    } else if (action === 'rechazar') {
+      document.getElementById('smRechazarName').textContent = _currentCandidateName;
+      document.getElementById('submodalRechazar').classList.add('open');
+    }
+  }
+
+  function closeSubModal(action) {
+    const ids = { aceptar: 'submodalAceptar', agendar: 'submodalAgendar', rechazar: 'submodalRechazar' };
+    document.getElementById(ids[action]).classList.remove('open');
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const prev = document.getElementById('_toast');
+    if (prev) prev.remove();
+    const el = document.createElement('div');
+    el.id = '_toast';
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  // ── Post-acción ────────────────────────────────────────────────────
+  function _postAction(newEstado) {
+    updateActionButtons(newEstado);
+    document.getElementById('mEstadoBadge').innerHTML = renderEstadoBadge(newEstado);
+    const idx = _cachedCandidates.findIndex(c => c.id === _currentCandidateId);
+    if (idx >= 0) _cachedCandidates[idx].estado = newEstado;
+    document.querySelectorAll(`tr[data-cid="${_currentCandidateId}"] .col-estado`).forEach(cell => {
+      cell.innerHTML = renderEstadoBadge(newEstado);
+    });
+  }
+
+  // ── Confirmaciones ─────────────────────────────────────────────────
+  async function confirmAceptar() {
+    const fecha = document.getElementById('smFechaInicio').value;
+    if (!fecha) { document.getElementById('smFechaInicio').focus(); return; }
+    closeSubModal('aceptar');
+    const r = await fetch(`/api/candidatos/${_currentCandidateId}/aceptar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
+      body: JSON.stringify({ fecha_inicio: fecha })
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    _postAction('aceptado');
+    showToast(data.email_sent ? '✓ Candidato aceptado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
+  }
+
+  async function confirmAgendar() {
+    const fecha = document.getElementById('smFechaCita').value;
+    const hora  = document.getElementById('smHoraCita').value;
+    if (!fecha) { document.getElementById('smFechaCita').focus(); return; }
+    if (!hora)  { document.getElementById('smHoraCita').focus();  return; }
+    const notas = document.getElementById('smNotas').value;
+    closeSubModal('agendar');
+    const r = await fetch(`/api/candidatos/${_currentCandidateId}/agendar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
+      body: JSON.stringify({ fecha_cita: fecha, hora_cita: hora, notas })
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    _postAction('agendado');
+    showToast(data.email_sent ? '✓ Cita agendada. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
+  }
+
+  async function confirmRechazar() {
+    closeSubModal('rechazar');
+    const r = await fetch(`/api/candidatos/${_currentCandidateId}/rechazar`, {
+      method: 'POST',
+      headers: { 'X-Recruiter-Password': AUTH }
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
+    _postAction('rechazado');
+    showToast(data.email_sent ? '✓ Candidato rechazado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
+  }
+
+  // Cerrar sub-modales al hacer clic fuera
+  ['submodalAceptar', 'submodalAgendar', 'submodalRechazar'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+      if (e.target.id === id) e.target.classList.remove('open');
+    });
   });
 </script>
+
+<!-- SUB-MODAL ACEPTAR -->
+<div class="submodal-overlay" id="submodalAceptar">
+  <div class="submodal">
+    <h3>Aceptar candidato</h3>
+    <p class="submodal-cand-name" id="smAceptarName"></p>
+    <div>
+      <label class="submodal-label" for="smFechaInicio">Fecha de inicio <span class="submodal-required">*</span></label>
+      <input type="date" id="smFechaInicio" />
+    </div>
+    <div class="submodal-actions">
+      <button class="btn-sm-cancel" onclick="closeSubModal('aceptar')">Cancelar</button>
+      <button class="btn-sm-confirm btn-sm-green" onclick="confirmAceptar()">Confirmar aceptación</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUB-MODAL AGENDAR -->
+<div class="submodal-overlay" id="submodalAgendar">
+  <div class="submodal">
+    <h3>Agendar cita</h3>
+    <p class="submodal-cand-name" id="smAgendarName"></p>
+    <div>
+      <label class="submodal-label" for="smFechaCita">Fecha de la cita <span class="submodal-required">*</span></label>
+      <input type="date" id="smFechaCita" />
+    </div>
+    <div>
+      <label class="submodal-label" for="smHoraCita">Hora de la cita <span class="submodal-required">*</span></label>
+      <input type="time" id="smHoraCita" />
+    </div>
+    <div>
+      <label class="submodal-label" for="smNotas">Notas adicionales</label>
+      <textarea id="smNotas" placeholder="Ej. La entrevista será por videollamada, enlace: ..."></textarea>
+    </div>
+    <div class="submodal-actions">
+      <button class="btn-sm-cancel" onclick="closeSubModal('agendar')">Cancelar</button>
+      <button class="btn-sm-confirm btn-sm-blue" onclick="confirmAgendar()">Confirmar cita</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUB-MODAL RECHAZAR -->
+<div class="submodal-overlay" id="submodalRechazar">
+  <div class="submodal">
+    <h3>Rechazar candidato</h3>
+    <p class="submodal-cand-name" id="smRechazarName"></p>
+    <p class="submodal-warning-text">¿Estás seguro de que deseas rechazar a este candidato? Se le enviará un correo de notificación.</p>
+    <div class="submodal-actions">
+      <button class="btn-sm-cancel" onclick="closeSubModal('rechazar')">Cancelar</button>
+      <button class="btn-sm-confirm btn-sm-red" onclick="confirmRechazar()">Confirmar rechazo</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
