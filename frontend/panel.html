@@ -1411,7 +1411,7 @@
     const grid = document.getElementById('candidatesGrid2');
     if (!grid) return;
     if (!candidates.length) {
-      grid.innerHTML = '<tr><td colspan="7"><div class="empty-state">No hay candidatos aún</div></td></tr>';
+      grid.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay candidatos aún</div></td></tr>';
       return;
     }
     grid.innerHTML = candidates.map((c, i) => {
@@ -1553,7 +1553,7 @@
 
     if (!candidates.length) {
       grid.innerHTML = `
-        <tr><td colspan="7">
+        <tr><td colspan="8">
           <div class="empty-state">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             No hay candidatos aún
@@ -1602,8 +1602,15 @@
   }
 
   async function openModal(id) {
-    const res = await fetch(`/api/panel/candidatos/${id}`, { headers: { 'X-Recruiter-Password': AUTH } });
-    const c   = await res.json();
+    let res, c;
+    try {
+      res = await fetch(`/api/panel/candidatos/${id}`, { headers: { 'X-Recruiter-Password': AUTH } });
+      c   = await res.json();
+    } catch (e) {
+      showToast('Error al cargar el candidato', 'error');
+      return;
+    }
+    if (!res.ok) { showToast('Error al cargar el candidato', 'error'); return; }
 
     _currentCandidateId   = id;
     _currentCandidateName = c.name;
@@ -1723,13 +1730,14 @@
   async function confirmAceptar() {
     const fecha = document.getElementById('smFechaInicio').value;
     if (!fecha) { document.getElementById('smFechaInicio').focus(); return; }
+    document.querySelector('#submodalAceptar .btn-sm-confirm').disabled = true;
     closeSubModal('aceptar');
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/aceptar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
       body: JSON.stringify({ fecha_inicio: fecha })
     });
-    const data = await r.json();
+    const data = r.ok ? await r.json() : {};
     if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
     _postAction('aceptado');
     showToast(data.email_sent ? '✓ Candidato aceptado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
@@ -1741,25 +1749,27 @@
     if (!fecha) { document.getElementById('smFechaCita').focus(); return; }
     if (!hora)  { document.getElementById('smHoraCita').focus();  return; }
     const notas = document.getElementById('smNotas').value;
+    document.querySelector('#submodalAgendar .btn-sm-confirm').disabled = true;
     closeSubModal('agendar');
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/agendar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Recruiter-Password': AUTH },
       body: JSON.stringify({ fecha_cita: fecha, hora_cita: hora, notas })
     });
-    const data = await r.json();
+    const data = r.ok ? await r.json() : {};
     if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
     _postAction('agendado');
     showToast(data.email_sent ? '✓ Cita agendada. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
   }
 
   async function confirmRechazar() {
+    document.querySelector('#submodalRechazar .btn-sm-confirm').disabled = true;
     closeSubModal('rechazar');
     const r = await fetch(`/api/candidatos/${_currentCandidateId}/rechazar`, {
       method: 'POST',
       headers: { 'X-Recruiter-Password': AUTH }
     });
-    const data = await r.json();
+    const data = r.ok ? await r.json() : {};
     if (!r.ok) { showToast('Error al procesar la acción', 'error'); return; }
     _postAction('rechazado');
     showToast(data.email_sent ? '✓ Candidato rechazado. Correo enviado.' : '✓ Estado actualizado. Correo no enviado.', data.email_sent ? 'success' : 'warning');
