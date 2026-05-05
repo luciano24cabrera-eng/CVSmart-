@@ -5,24 +5,528 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel Reclutador — CVSmart</title>
 
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet" />
-
-  <!-- Stylesheets -->
   <link rel="stylesheet" href="./styles/theme.css" />
-  <link rel="stylesheet" href="./styles/components.css" />
-  <link rel="stylesheet" href="./styles/animations.css" />
 
-  <!-- Panel-specific styles -->
   <style>
-    main {
-      padding-top: 80px;
-      padding-bottom: 4rem;
+    /* ── Base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    ::selection { background: rgba(228, 60, 47, 0.3); color: #fff; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
     }
 
-    /* LOGIN SCREEN */
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: rgba(228, 60, 47, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(228, 60, 47, 0.5); }
+
+    a { color: inherit; text-decoration: none; }
+    button, [role="button"] { font-family: 'Inter', sans-serif; cursor: pointer; border: none; }
+    *:focus-visible { outline: 2px solid rgba(228, 60, 47, 0.5); outline-offset: 3px; border-radius: 4px; }
+
+    /* ── Sidebar ───────────────────────────────────────────────────── */
+    .sidebar {
+      display: none;
+      flex-direction: column;
+      width: 240px;
+      min-height: 100vh;
+      background: #111;
+      border-right: 1px solid rgba(228, 60, 47, 0.08);
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 50;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar.open { display: flex; }
+
+    .sidebar-logo {
+      padding: 1.25rem 1.25rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-logo a {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-logo .accent { color: #e43c2f; }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 0.75rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(160, 160, 160, 0.4);
+      padding: 0.75rem 0.5rem 0.4rem;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #a0a0a0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-item:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sidebar-item.active {
+      color: #fff;
+      background: rgba(228, 60, 47, 0.10);
+      border-left-color: #e43c2f;
+    }
+
+    .sidebar-item svg {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .sidebar-item.active svg { opacity: 1; }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: #a0a0a0;
+    }
+
+    .session-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+      animation: blink 2.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Main wrapper ──────────────────────────────────────────────── */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-wrapper.with-sidebar {
+      margin-left: 240px;
+    }
+
+    /* ── Dashboard header ──────────────────────────────────────────── */
+    .dash-header {
+      height: 60px;
+      border-bottom: 1px solid rgba(228, 60, 47, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      background: #0a0a0a;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: #a0a0a0;
+    }
+
+    .breadcrumb span { color: #fff; }
+    .breadcrumb-sep { opacity: 0.3; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-ai-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.06);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-ai-active::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    .btn-logout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #a0a0a0;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-logout:hover {
+      border-color: rgba(228, 60, 47, 0.3);
+      color: #fff;
+    }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: #a0a0a0;
+      cursor: pointer;
+      padding: 4px;
+      margin-right: 8px;
+    }
+
+    /* ── Dashboard content ─────────────────────────────────────────── */
+    .dash-content {
+      padding: 2rem;
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .dash-title-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+
+    .dash-title-row h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .dash-title-row p {
+      font-size: 0.82rem;
+      color: #a0a0a0;
+      margin-top: 2px;
+    }
+
+    /* ── Stat cards ────────────────────────────────────────────────── */
+    #statsRow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: #161616;
+      border: 1px solid rgba(228, 60, 47, 0.08);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      transition: border-color 0.2s ease;
+    }
+
+    .stat-card:hover { border-color: rgba(228, 60, 47, 0.3); }
+
+    .stat-card-icon {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      color: #e43c2f;
+      opacity: 0.6;
+    }
+
+    .stat-val {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #e43c2f;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: #a0a0a0;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-trend {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .stat-trend.up { color: #22c55e; }
+    .stat-trend.neutral { color: #a0a0a0; }
+
+    /* ── Table ─────────────────────────────────────────────────────── */
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .table-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .candidates-table-wrap {
+      background: #111;
+      border: 1px solid rgba(228, 60, 47, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .candidates-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .candidates-table thead {
+      background: #161616;
+      position: sticky;
+      top: 60px;
+      z-index: 20;
+    }
+
+    .candidates-table thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a0a0a0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+
+    .candidates-table thead th:first-child { width: 60px; text-align: center; }
+    .candidates-table thead th.col-actions { text-align: center; }
+
+    .candidates-table tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.15s ease;
+      cursor: pointer;
+    }
+
+    .candidates-table tbody tr:nth-child(odd) { background: #0a0a0a; }
+    .candidates-table tbody tr:nth-child(even) { background: #0d0d0d; }
+    .candidates-table tbody tr:hover { background: rgba(228, 60, 47, 0.04); }
+    .candidates-table tbody tr:last-child { border-bottom: none; }
+
+    .candidates-table td {
+      padding: 13px 16px;
+      font-size: 0.85rem;
+      color: #fff;
+      vertical-align: middle;
+    }
+
+    .col-rank {
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: rgba(228, 60, 47, 0.15);
+      letter-spacing: -0.03em;
+    }
+
+    .col-name {
+      font-weight: 600;
+      font-size: 0.87rem;
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.82rem;
+      border: 2px solid;
+    }
+
+    .score-green  { color: #22c55e; border-color: rgba(34, 197, 94, 0.3);  background: rgba(34, 197, 94, 0.08); }
+    .score-yellow { color: #eab308; border-color: rgba(234,179,8, 0.3);    background: rgba(234,179,8, 0.08); }
+    .score-red    { color: #e43c2f; border-color: rgba(228, 60, 47, 0.3);  background: rgba(228, 60, 47, 0.08); }
+
+    .col-label { color: #a0a0a0; font-size: 0.82rem; }
+    .col-avail { color: #a0a0a0; font-size: 0.82rem; }
+
+    .col-actions { text-align: center; }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: transparent;
+      color: #a0a0a0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0 2px;
+    }
+
+    .icon-btn:hover { border-color: rgba(228,60,47,0.4); color: #fff; background: rgba(228,60,47,0.06); }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #a0a0a0;
+      font-size: 0.9rem;
+    }
+
+    .empty-state svg { margin: 0 auto 1rem; display: block; opacity: 0.2; }
+
+    /* ── Skeleton loader ───────────────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
+    }
+
+    .skeleton-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .skeleton-card { height: 100px; border-radius: 12px; }
+    .skeleton-row  { height: 50px; margin-bottom: 4px; }
+
+    /* ── Login screen ──────────────────────────────────────────────── */
     .login-wrap {
-      min-height: calc(100vh - 80px);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .login-branding {
+      flex: 1;
+      background: #111;
+      border-right: 1px solid rgba(228, 60, 47, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 3.5rem;
+    }
+
+    .login-branding .logo {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.5rem;
+    }
+
+    .login-branding .logo .accent { color: #e43c2f; }
+
+    .login-branding h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .login-branding > p {
+      color: #a0a0a0;
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+      max-width: 340px;
+      line-height: 1.7;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #a0a0a0;
+    }
+
+    .feature-item svg { color: #22c55e; flex-shrink: 0; }
+
+    .login-form-side {
+      width: 440px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -30,512 +534,963 @@
     }
 
     .login-card {
-      background-color: var(--color-bg-secondary);
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 8px 32px var(--color-shadow-red);
-      padding: 2.5rem;
       width: 100%;
-      max-width: 400px;
-      text-align: center;
+      max-width: 360px;
+    }
+
+    .login-card-icon {
+      width: 48px; height: 48px;
+      background: rgba(228, 60, 47, 0.08);
+      border: 1px solid rgba(228, 60, 47, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e43c2f;
+      margin-bottom: 1.5rem;
     }
 
     .login-card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      color: var(--color-text-primary);
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.375rem;
+      letter-spacing: -0.02em;
     }
 
-    .login-card p {
-      color: var(--color-text-secondary);
-      margin-bottom: 1.5rem;
+    .login-card > p {
+      color: #a0a0a0;
+      font-size: 0.85rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #a0a0a0;
+      margin-bottom: 6px;
     }
 
     input[type="password"] {
       width: 100%;
-      padding: 12px 16px;
-      background-color: var(--color-bg-primary);
-      border: 1.5px solid var(--color-border-light);
-      border-radius: var(--radius-sm);
-      color: var(--color-text-primary);
-      font-size: 1rem;
+      padding: 11px 14px;
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
       font-family: inherit;
       margin-bottom: 1rem;
-      transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     input[type="password"]:focus {
       outline: none;
-      border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px var(--color-shadow-red);
+      border-color: #e43c2f;
+      box-shadow: 0 0 0 3px rgba(228, 60, 47, 0.12);
     }
 
-    input[type="password"]::placeholder {
-      color: var(--color-text-secondary);
-    }
+    input[type="password"]::placeholder { color: rgba(160,160,160,0.5); }
 
-    .btn-primary {
+    .btn-login {
       width: 100%;
-      padding: 13px;
-      background-color: var(--color-accent);
-      color: var(--color-text-primary);
+      padding: 12px;
+      background: #e43c2f;
+      color: #fff;
       border: none;
-      border-radius: var(--radius-sm);
-      font-size: 1rem;
-      font-weight: var(--fw-extra-bold);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all var(--transition-normal);
+      transition: all 0.2s ease;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px var(--color-shadow-red);
+    .btn-login:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 20px rgba(228, 60, 47, 0.3);
     }
 
     .error-msg {
-      color: #ff6b6b;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
+      color: #f87171;
+      font-size: 0.8rem;
+      margin-top: 0.75rem;
+      min-height: 1.2em;
     }
 
-    /* DASHBOARD */
-    #dashboard {
-      display: none;
-    }
-
-    .dashboard {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    .dashboard h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-size: 2rem;
-    }
-
-    .dashboard > p {
-      text-align: center;
-      color: var(--color-text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    /* STATS GRID */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .stat-card {
-      background-color: var(--color-bg-secondary);
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      text-align: center;
-      transition: all var(--transition-normal);
-    }
-
-    .stat-card:hover {
-      border-color: var(--color-accent);
-      box-shadow: 0 4px 16px var(--color-shadow-red);
-    }
-
-    .stat-val {
-      font-size: 2.5rem;
-      font-weight: var(--fw-extra-bold);
-      color: var(--color-accent);
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--color-text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* CANDIDATES GRID */
-    .candidates-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .candidate-card {
-      background-color: var(--color-bg-secondary);
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      transition: all var(--transition-normal);
-    }
-
-    .candidate-card:hover {
-      border-color: var(--color-accent);
-      box-shadow: 0 4px 16px var(--color-shadow-red);
-      transform: translateY(-4px);
-    }
-
-    .candidate-score {
-      display: inline-block;
-      background-color: var(--color-accent);
-      color: var(--color-text-primary);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius-sm);
-      font-weight: var(--fw-bold);
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .candidate-info h3 {
-      margin-bottom: 0.5rem;
-      color: var(--color-text-primary);
-      font-size: 1.1rem;
-    }
-
-    .candidate-info p {
-      color: var(--color-text-secondary);
-      font-size: 0.9rem;
-      margin: 0.25rem 0;
-    }
-
-    .candidate-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .candidate-actions a,
-    .candidate-actions button {
-      flex: 1;
-      padding: 10px 8px;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: var(--fw-semi-bold);
-      transition: all var(--transition-normal);
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .action-download {
-      background-color: var(--color-accent);
-      color: var(--color-text-primary);
-    }
-
-    .action-download:hover {
-      box-shadow: 0 4px 12px var(--color-shadow-red);
-      transform: translateY(-2px);
-    }
-
-    .action-view {
-      background-color: transparent;
-      border: 1px solid var(--color-accent);
-      color: var(--color-accent);
-    }
-
-    .action-view:hover {
-      background-color: rgba(228, 60, 47, 0.1);
-      transform: translateY(-2px);
-    }
-
-    .empty {
-      text-align: center;
-      padding: 3rem;
-      color: var(--color-text-secondary);
-      grid-column: 1 / -1;
-    }
-
-    /* MODAL */
+    /* ── Modal ─────────────────────────────────────────────────────── */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      z-index: var(--z-modal);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 200;
       align-items: center;
       justify-content: center;
       padding: 1rem;
     }
 
-    .modal-overlay.open {
-      display: flex;
-    }
+    .modal-overlay.open { display: flex; }
 
     .modal {
-      background-color: var(--color-bg-secondary);
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
-      padding: 2rem;
+      background: #161616;
+      border: 1px solid rgba(228, 60, 47, 0.12);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
       width: 100%;
-      max-width: 620px;
-      max-height: 85vh;
+      max-width: 600px;
+      max-height: 88vh;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
+
+    .modal-score-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px 3px 0 0;
+      overflow: hidden;
+    }
+
+    .modal-score-bar-fill {
+      height: 100%;
+      background: #e43c2f;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .modal-inner { padding: 1.75rem; }
 
     .modal-header {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 1rem;
       margin-bottom: 1.5rem;
     }
 
     .modal-avatar {
-      width: 56px;
-      height: 56px;
+      width: 52px; height: 52px;
       border-radius: 50%;
-      background-color: var(--color-accent);
-      color: var(--color-text-primary);
+      background: linear-gradient(135deg, #2a0a08, #1a0604);
+      border: 1px solid rgba(228, 60, 47, 0.3);
+      color: #e43c2f;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
-      font-weight: var(--fw-extra-bold);
+      font-size: 1.1rem;
+      font-weight: 800;
       flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
     }
 
     .modal-title h2 {
-      font-size: 1.3rem;
-      color: var(--color-text-primary);
-      margin-bottom: 0.25rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 3px;
     }
 
-    .modal-title p {
-      color: var(--color-text-secondary);
-      font-size: 0.9rem;
+    .modal-title p { color: #a0a0a0; font-size: 0.83rem; }
+
+    .modal-score-ring {
+      margin-left: auto;
+      flex-shrink: 0;
     }
 
-    .modal-section {
-      margin-bottom: 1.5rem;
+    .modal-sep {
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+      margin: 1.25rem 0;
     }
+
+    .modal-section { margin-bottom: 1.25rem; }
 
     .modal-section h4 {
-      font-size: 0.75rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-accent);
-      font-weight: var(--fw-extra-bold);
-      margin-bottom: 0.75rem;
+      letter-spacing: 0.1em;
+      color: #e43c2f;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
     }
 
     .modal-section p {
-      color: var(--color-text-secondary);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .skills-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .skill-tag {
-      padding: 6px 12px;
-      background-color: rgba(228, 60, 47, 0.15);
-      color: var(--color-accent);
-      border: 1px solid var(--color-border-light);
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: var(--fw-semi-bold);
+      color: #a0a0a0;
+      font-size: 0.875rem;
+      line-height: 1.65;
     }
 
     .strength-box {
-      background-color: rgba(228, 60, 47, 0.15);
-      color: var(--color-accent);
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      border-left: 3px solid var(--color-accent);
+      background: rgba(228, 60, 47, 0.08);
+      border-left: 3px solid #e43c2f;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      color: #fff;
+      line-height: 1.5;
     }
 
-    .modal-footer {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      flex-wrap: wrap;
-    }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
-    .btn-close {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-sm);
-      background-color: transparent;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      font-weight: var(--fw-semi-bold);
-      transition: all var(--transition-normal);
-    }
-
-    .btn-close:hover {
-      border-color: var(--color-accent);
-      color: var(--color-accent);
-    }
-
-    .btn-download {
-      flex: 2;
-      padding: 12px;
-      background-color: var(--color-accent);
-      color: var(--color-text-primary);
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-weight: var(--fw-extra-bold);
-      font-size: 0.95rem;
-      transition: all var(--transition-normal);
-    }
-
-    .btn-download:hover {
-      box-shadow: 0 4px 12px var(--color-shadow-red);
-      transform: translateY(-2px);
+    .skill-tag {
+      padding: 4px 10px;
+      background: rgba(228, 60, 47, 0.08);
+      color: #e43c2f;
+      border: 1px solid rgba(228, 60, 47, 0.2);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
 
     .answer-row {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--color-border-light);
-      font-size: 0.9rem;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.85rem;
     }
 
-    .answer-row:last-child {
-      border-bottom: none;
+    .answer-row:last-child { border-bottom: none; }
+    .answer-row span:first-child { color: #a0a0a0; }
+    .answer-row span:last-child { font-weight: 600; }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
     }
 
-    .answer-row span:first-child {
-      color: var(--color-text-secondary);
+    .action-btn {
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      background: transparent;
     }
 
-    .answer-row span:last-child {
-      font-weight: var(--fw-semi-bold);
-      color: var(--color-text-primary);
+    .action-approve {
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
     }
 
-    @media (max-width: 640px) {
-      .dashboard {
-        padding: 0 1rem;
-      }
+    .action-approve:hover { background: rgba(34, 197, 94, 0.08); }
 
-      .candidates-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .modal-footer {
-        flex-direction: column;
-      }
-
-      .btn-close,
-      .btn-download {
-        flex: 1;
-      }
+    .action-schedule {
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      color: #eab308;
     }
+
+    .action-schedule:hover { background: rgba(234, 179, 8, 0.08); }
+
+    .action-discard {
+      border: 1px solid rgba(228, 60, 47, 0.2);
+      color: #a0a0a0;
+    }
+
+    .action-discard:hover { border-color: rgba(228, 60, 47, 0.5); color: #fff; }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 1.25rem;
+    }
+
+    .btn-close {
+      flex: 1;
+      padding: 11px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: transparent;
+      color: #a0a0a0;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close:hover { border-color: rgba(228,60,47,0.3); color: #fff; }
+
+    .btn-download {
+      flex: 2;
+      padding: 11px;
+      background: #e43c2f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-download:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 14px rgba(228, 60, 47, 0.3);
+    }
+
+    /* ── Fade-in animations ────────────────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card { animation: fadeInUp 0.4s ease both; }
+    .stat-card:nth-child(1) { animation-delay: 0s; }
+    .stat-card:nth-child(2) { animation-delay: 0.08s; }
+    .stat-card:nth-child(3) { animation-delay: 0.16s; }
+
+    /* ── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { display: flex; transform: translateX(0); }
+      .main-wrapper.with-sidebar { margin-left: 0; }
+      .hamburger { display: flex; }
+      .login-branding { display: none; }
+      .login-form-side { width: 100%; }
+      #statsRow { grid-template-columns: 1fr; }
+      .candidates-table thead th.col-label,
+      .candidates-table td.col-label,
+      .candidates-table thead th.col-avail,
+      .candidates-table td.col-avail { display: none; }
+      .modal-actions { grid-template-columns: 1fr; }
+      .dash-content { padding: 1.25rem; }
+    }
+
+    /* ── Estado badges ─────────────────────────────────────────────── */
+    .estado-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+    .estado-pendiente  { background: rgba(160,160,160,0.1); color: #6b7280; }
+    .estado-aceptado   { background: rgba(34,197,94,0.1);   color: #22c55e; }
+    .estado-agendado   { background: rgba(59,130,246,0.1);  color: #60a5fa; }
+    .estado-rechazado  { background: rgba(228,60,47,0.08);  color: #f87171; }
+
+    /* ── Toast ─────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1e1e1e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.83rem;
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 400;
+      max-width: 320px;
+      animation: slideInRight 0.25s ease;
+    }
+    .toast.success { border-left: 3px solid #22c55e; }
+    .toast.warning { border-left: 3px solid #eab308; }
+    .toast.error   { border-left: 3px solid #e43c2f; }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Sub-modales ───────────────────────────────────────────────── */
+    .submodal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .submodal-overlay.open { display: flex; }
+    .submodal {
+      background: #1a1a1a;
+      border: 1px solid rgba(228,60,47,0.15);
+      border-radius: 14px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+    .submodal h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .submodal-cand-name {
+      color: #a0a0a0;
+      font-size: 0.85rem;
+      margin: 0;
+    }
+    .submodal-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #a0a0a0;
+      margin-bottom: 5px;
+    }
+    .submodal-required { color: #e43c2f; }
+    .submodal input[type="date"],
+    .submodal input[type="time"],
+    .submodal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+    .submodal input:focus,
+    .submodal textarea:focus {
+      outline: none;
+      border-color: #e43c2f;
+      box-shadow: 0 0 0 3px rgba(228,60,47,0.1);
+    }
+    .submodal textarea { resize: vertical; min-height: 78px; }
+    .submodal-warning-text {
+      color: #a0a0a0;
+      font-size: 0.85rem;
+      background: rgba(228,60,47,0.05);
+      border: 1px solid rgba(228,60,47,0.12);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .submodal-actions { display: flex; gap: 8px; margin-top: 0.25rem; }
+    .btn-sm-cancel {
+      flex: 1; padding: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; background: transparent;
+      color: #a0a0a0; cursor: pointer;
+      font-size: 0.83rem; font-weight: 600; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-sm-cancel:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .btn-sm-confirm {
+      flex: 2; padding: 10px; border: none; border-radius: 8px;
+      cursor: pointer; font-size: 0.83rem; font-weight: 700;
+      font-family: inherit; color: #fff; transition: all 0.2s;
+    }
+    .btn-sm-green { background: #16a34a; }
+    .btn-sm-green:hover { background: #15803d; box-shadow: 0 4px 12px rgba(34,197,94,0.25); }
+    .btn-sm-blue  { background: #2563eb; }
+    .btn-sm-blue:hover  { background: #1d4ed8; box-shadow: 0 4px 12px rgba(59,130,246,0.25); }
+    .btn-sm-red   { background: #dc2626; }
+    .btn-sm-red:hover   { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.25); }
   </style>
 </head>
 <body>
 
-<!-- NAVIGATION -->
-<nav>
-  <a class="nav-logo" href="/">🧠 CVSmart</a>
-  <div class="nav-links">
-    <a href="/">Inicio</a>
-    <a href="/aplicar">Postularme</a>
-    <a href="/crear-cv">Crear CV</a>
-    <a href="/panel">Reclutador</a>
-    <a href="/aplicar" class="btn-nav">Subir CV →</a>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <a href="/">CV<span class="accent">Smart</span></a>
   </div>
-</nav>
 
-<main>
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Principal</div>
+    <div class="sidebar-item active" data-section="sectionDashboard" onclick="switchSection('sectionDashboard', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      Dashboard
+    </div>
+    <div class="sidebar-item" data-section="sectionCandidatos" onclick="switchSection('sectionCandidatos', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Candidatos
+    </div>
+    <div class="sidebar-item" data-section="sectionEstadisticas" onclick="switchSection('sectionEstadisticas', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Estadísticas
+    </div>
+    <div class="sidebar-item" data-section="sectionConfig" onclick="switchSection('sectionConfig', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>
+      </svg>
+      Configuración
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="session-info">
+      <div class="session-dot"></div>
+      Modo reclutador activo
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div class="main-wrapper" id="mainWrapper">
+
   <!-- LOGIN SCREEN -->
   <div class="login-wrap" id="loginWrap">
-    <div class="login-card">
-      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
-      <h2>Panel Reclutador</h2>
-      <p>Ingresa la contraseña para acceder al dashboard</p>
-      <input type="password" id="passwordInput" placeholder="Contraseña" />
-      <button class="btn-primary" onclick="doLogin()">Acceder al panel</button>
-      <p class="error-msg" id="loginError"></p>
+    <div class="login-branding">
+      <div class="logo">CV<span class="accent">Smart</span></div>
+      <h2>Reclutamiento<br>potenciado por IA</h2>
+      <p>Analiza cientos de candidatos en segundos. Puntajes objetivos, retroalimentación automática y decisiones más rápidas.</p>
+      <div class="feature-list">
+        <div class="feature-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Filtrado automático con puntaje 1–10
+        </div>
+        <div class="feature-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Resumen ejecutivo de cada candidato
+        </div>
+        <div class="feature-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Retroalimentación automática por email
+        </div>
+      </div>
+    </div>
+
+    <div class="login-form-side">
+      <div class="login-card">
+        <div class="login-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h2>Acceso al panel</h2>
+        <p>Ingresa la contraseña para continuar</p>
+        <label class="field-label" for="passwordInput">Contraseña</label>
+        <input type="password" id="passwordInput" placeholder="••••••••" />
+        <button class="btn-login" onclick="doLogin()">Acceder al panel</button>
+        <p class="error-msg" id="loginError"></p>
+      </div>
     </div>
   </div>
 
   <!-- DASHBOARD -->
-  <div id="dashboard">
-    <div class="dashboard">
-      <h1>Panel de Reclutamiento</h1>
-      <p>Candidatos recibidos y analizados por IA</p>
+  <div id="dashboard" style="display:none; flex-direction:column; min-height:100vh;">
 
-      <!-- Statistics Cards -->
-      <div class="stats" id="statsRow">
-        <div class="stat-card">
-          <div class="stat-val" id="statTotal">—</div>
-          <div class="stat-label">Total candidatos</div>
+    <!-- Dashboard header -->
+    <header class="dash-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menú">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="breadcrumb">
+          Panel
+          <span class="breadcrumb-sep">›</span>
+          <span>Candidatos</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-val" id="statAvg">—</div>
-          <div class="stat-label">Puntaje promedio</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="statTop">—</div>
-          <div class="stat-label">Top candidatos (8+)</div>
+      </div>
+      <div class="header-right">
+        <div class="badge-ai-active">IA activa</div>
+        <button class="btn-logout" onclick="doLogout()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- Skeleton loader (shown while loading) -->
+    <div class="dash-content" id="skeletonLoader">
+      <div class="skeleton-cards">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+      <div class="skeleton skeleton-row"></div>
+      <div class="skeleton skeleton-row"></div>
+      <div class="skeleton skeleton-row"></div>
+      <div class="skeleton skeleton-row"></div>
+    </div>
+
+    <!-- Actual dashboard content (shown after load) -->
+    <div class="dash-content" id="dashContent" style="display:none;">
+      <div class="dash-title-row">
+        <div>
+          <h1>Panel de Reclutamiento</h1>
+          <p>Candidatos recibidos y analizados por IA</p>
         </div>
       </div>
 
-      <!-- Candidates Grid -->
-      <div class="candidates-grid" id="candidatesGrid"></div>
+      <!-- Stats cards -->
+      <div id="statsRow">
+        <div class="stat-card">
+          <div class="stat-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="stat-val" id="statTotal">—</div>
+          <div class="stat-label">Total candidatos</div>
+          <div class="stat-trend up" id="statTotalTrend"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="stat-val" id="statAvg">—</div>
+          <div class="stat-label">Puntaje promedio</div>
+          <div class="stat-trend neutral" id="statAvgTrend"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <div class="stat-val" id="statTop">—</div>
+          <div class="stat-label">Top candidatos (8+)</div>
+          <div class="stat-trend up" id="statTopTrend"></div>
+        </div>
+      </div>
+
+      <!-- Candidates table -->
+      <div class="table-header">
+        <h2>Candidatos</h2>
+      </div>
+
+      <div class="candidates-table-wrap">
+        <table class="candidates-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Score</th>
+              <th class="col-label">Perfil</th>
+              <th class="col-label">Experiencia</th>
+              <th class="col-avail">Disponibilidad</th>
+              <th class="col-estado">Estado</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="candidatesGrid"></tbody>
+        </table>
+      </div>
+    </div><!-- /#dashContent (Dashboard section) -->
+
+    <!-- CANDIDATOS section (tabla sola, sin stats) -->
+    <div class="dash-content section-panel" id="sectionCandidatos" style="display:none;">
+      <div class="dash-title-row">
+        <div>
+          <h1>Candidatos</h1>
+          <p>Lista completa de perfiles recibidos</p>
+        </div>
+      </div>
+      <div class="candidates-table-wrap">
+        <table class="candidates-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Score</th>
+              <th class="col-label">Perfil</th>
+              <th class="col-label">Experiencia</th>
+              <th class="col-avail">Disponibilidad</th>
+              <th class="col-estado">Estado</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="candidatesGrid2"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</main>
+
+    <!-- ESTADÍSTICAS section -->
+    <div class="dash-content section-panel" id="sectionEstadisticas" style="display:none;">
+      <div class="dash-title-row">
+        <div>
+          <h1>Estadísticas</h1>
+          <p>Resumen del proceso de reclutamiento</p>
+        </div>
+      </div>
+      <div id="statsRow2" style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem;"></div>
+      <div style="background:#161616; border:1px solid rgba(228,60,47,0.08); border-radius:12px; padding:2rem;">
+        <h3 style="font-family:Poppins,sans-serif; font-size:0.95rem; margin-bottom:1.5rem; color:#a0a0a0; text-transform:uppercase; letter-spacing:0.06em; font-size:0.7rem;">Distribución de puntajes</h3>
+        <div id="scoreDistribution" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- CONFIGURACIÓN section -->
+    <div class="dash-content section-panel" id="sectionConfig" style="display:none;">
+      <div class="dash-title-row">
+        <div>
+          <h1>Configuración</h1>
+          <p>Ajustes del panel de reclutamiento</p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem; max-width:560px;">
+        <div style="background:#161616; border:1px solid rgba(228,60,47,0.08); border-radius:12px; padding:1.5rem;">
+          <h3 style="font-family:Poppins,sans-serif; font-size:0.95rem; margin-bottom:0.375rem;">Sesión</h3>
+          <p style="color:#a0a0a0; font-size:0.83rem; margin-bottom:1.25rem;">Estás autenticado como reclutador.</p>
+          <button class="btn-logout" onclick="doLogout()" style="font-size:0.83rem; padding:8px 16px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+          </button>
+        </div>
+        <div style="background:#161616; border:1px solid rgba(228,60,47,0.08); border-radius:12px; padding:1.5rem;">
+          <h3 style="font-family:Poppins,sans-serif; font-size:0.95rem; margin-bottom:0.375rem;">Sistema</h3>
+          <p style="color:#a0a0a0; font-size:0.83rem; margin-bottom:1rem;">Análisis de CVs mediante <strong style="color:#fff;">Groq AI</strong>. Retroalimentación automática por email activada.</p>
+          <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#22c55e;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+            Todos los servicios operando con normalidad
+          </div>
+        </div>
+        <div style="background:#161616; border:1px solid rgba(228,60,47,0.08); border-radius:12px; padding:1.5rem;">
+          <h3 style="font-family:Poppins,sans-serif; font-size:0.95rem; margin-bottom:0.375rem;">Acerca de</h3>
+          <p style="color:#a0a0a0; font-size:0.83rem;">CVSmart v2.0 — Filtrado inteligente de candidatos para el mercado B2B mexicano.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#dashboard -->
+</div><!-- /.main-wrapper -->
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modal">
-    <div class="modal-header">
-      <div class="modal-avatar" id="mAvatar"></div>
-      <div class="modal-title">
-        <h2 id="mName"></h2>
-        <p id="mEmail"></p>
+    <div class="modal-score-bar">
+      <div class="modal-score-bar-fill" id="mScoreBarFill" style="width:0%"></div>
+    </div>
+    <div class="modal-inner">
+      <div class="modal-header">
+        <div class="modal-avatar" id="mAvatar"></div>
+        <div class="modal-title">
+          <h2 id="mName"></h2>
+          <p id="mEmail"></p>
+        </div>
+        <div class="modal-score-ring" id="mScoreRing"></div>
       </div>
-    </div>
-    <div class="modal-section">
-      <h4>Resumen ejecutivo</h4>
-      <p id="mSummary"></p>
-    </div>
-    <div class="modal-section">
-      <h4>Fortaleza principal</h4>
-      <div id="mStrength" class="strength-box"></div>
-    </div>
-    <div class="modal-section">
-      <h4>Áreas de oportunidad</h4>
-      <ul id="mWeaknesses" style="padding-left: 1.2rem; color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.8;"></ul>
-    </div>
-    <div class="modal-section">
-      <h4>Habilidades coincidentes</h4>
-      <div class="skills-list" id="mSkills"></div>
-    </div>
-    <div class="modal-section">
-      <h4>Respuestas de filtro</h4>
-      <div id="mAnswers"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-close" onclick="closeModal()">Cerrar</button>
-      <button class="btn-download" id="mDownloadBtn">⬇️ Descargar CV</button>
+
+      <div class="modal-sep"></div>
+
+      <div class="modal-section">
+        <h4>Resumen ejecutivo</h4>
+        <p id="mSummary"></p>
+      </div>
+
+      <div class="modal-sep"></div>
+
+      <div class="modal-section">
+        <h4>Fortaleza principal</h4>
+        <div id="mStrength" class="strength-box"></div>
+      </div>
+
+      <div class="modal-section">
+        <h4>Áreas de oportunidad</h4>
+        <ul id="mWeaknesses" style="padding-left:1.1rem; color:#a0a0a0; font-size:0.875rem; line-height:1.9;"></ul>
+      </div>
+
+      <div class="modal-section">
+        <h4>Habilidades coincidentes</h4>
+        <div class="skills-list" id="mSkills"></div>
+      </div>
+
+      <div class="modal-sep"></div>
+
+      <div class="modal-section">
+        <h4>Respuestas de filtro</h4>
+        <div id="mAnswers"></div>
+      </div>
+
+      <div class="modal-sep"></div>
+
+      <div class="modal-section">
+        <h4>Acción rápida</h4>
+        <div class="modal-actions">
+          <button class="action-btn action-approve">✓ Aprobar</button>
+          <button class="action-btn action-schedule">◷ Agendar</button>
+          <button class="action-btn action-discard">✕ Descartar</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-close" onclick="closeModal()">Cerrar</button>
+        <button class="btn-download" id="mDownloadBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar CV
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer style="background-color: var(--color-bg-primary); color: var(--color-text-secondary); text-align: center; padding: 2rem; font-size: 0.9rem; border-top: 1px solid var(--color-border-light);">
-  <p>CVSmart &copy; 2026 — Potenciado por <strong style="color: var(--color-accent);">Groq AI</strong></p>
-</footer>
-
 <script>
   let AUTH = '';
+
+  function renderEstadoBadge(estado) {
+    const labels = { pendiente: 'Pendiente', aceptado: 'Aceptado', agendado: 'Agendado', rechazado: 'Rechazado' };
+    const label = labels[estado] || estado;
+    return `<span class="estado-badge estado-${esc(estado)}">${esc(label)}</span>`;
+  }
+
+  let _cachedCandidates = [];
+  let _cachedStats = {};
+
+  // Map section IDs to breadcrumb labels
+  const SECTION_LABELS = {
+    sectionDashboard:    'Dashboard',
+    sectionCandidatos:   'Candidatos',
+    sectionEstadisticas: 'Estadísticas',
+    sectionConfig:       'Configuración',
+  };
+
+  function switchSection(sectionId, el) {
+    // Update sidebar active state
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+
+    // Update breadcrumb
+    const label = SECTION_LABELS[sectionId] || sectionId;
+    document.querySelector('.breadcrumb span').textContent = label;
+
+    // Show correct section, hide others
+    const sections = ['dashContent', 'sectionCandidatos', 'sectionEstadisticas', 'sectionConfig'];
+    sections.forEach(id => {
+      const el2 = document.getElementById(id);
+      if (el2) el2.style.display = 'none';
+    });
+
+    // Map sectionDashboard → dashContent
+    const targetId = sectionId === 'sectionDashboard' ? 'dashContent' : sectionId;
+    const target = document.getElementById(targetId);
+    if (target) target.style.display = 'block';
+
+    // Populate section-specific content from cache
+    if (sectionId === 'sectionCandidatos') renderCandidatesTable2(_cachedCandidates);
+    if (sectionId === 'sectionEstadisticas') renderStats(_cachedStats, _cachedCandidates);
+  }
+
+  function renderCandidatesTable2(candidates) {
+    const grid = document.getElementById('candidatesGrid2');
+    if (!grid) return;
+    if (!candidates.length) {
+      grid.innerHTML = '<tr><td colspan="7"><div class="empty-state">No hay candidatos aún</div></td></tr>';
+      return;
+    }
+    grid.innerHTML = candidates.map((c, i) => {
+      const score = parseFloat(c.score) || 0;
+      const cls   = score >= 8 ? 'score-green' : score >= 6 ? 'score-yellow' : 'score-red';
+      const rank  = String(i + 1).padStart(2, '0');
+      return `
+        <tr data-cid="${c.id}" onclick="openModal(${c.id})">
+          <td class="col-rank">${esc(rank)}</td>
+          <td class="col-name">${esc(c.name)}</td>
+          <td><span class="score-badge ${cls}">${esc(c.score)}</span></td>
+          <td class="col-label">${esc(c.score_label || '—')}</td>
+          <td class="col-label">${esc(c.years_experience ?? '—')} años</td>
+          <td class="col-avail">${esc(c.availability || '—')}</td>
+          <td class="col-estado">${renderEstadoBadge(c.estado || 'pendiente')}</td>
+          <td class="col-actions" onclick="event.stopPropagation()">
+            <button class="icon-btn" title="Descargar CV" onclick="downloadCV(${c.id})">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="icon-btn" title="Ver detalles" onclick="openModal(${c.id})">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderStats(stats, candidates) {
+    // Stat cards clone
+    const row = document.getElementById('statsRow2');
+    if (row) {
+      const total = stats.total ?? 0;
+      const top   = stats.high_score ?? 0;
+      row.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-val">${esc(String(total))}</div>
+          <div class="stat-label">Total candidatos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${esc(String(stats.avg_score ?? '—'))}</div>
+          <div class="stat-label">Puntaje promedio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${esc(String(top))}</div>
+          <div class="stat-label">Top candidatos (8+)</div>
+        </div>`;
+    }
+
+    // Score distribution bars
+    const dist = document.getElementById('scoreDistribution');
+    if (!dist || !candidates.length) return;
+    const buckets = [
+      { label: '8–10 · Excelente', min: 8,  max: 11, color: '#22c55e' },
+      { label: '6–7  · Bueno',     min: 6,  max: 8,  color: '#eab308' },
+      { label: '1–5  · Regular',   min: 0,  max: 6,  color: '#e43c2f' },
+    ];
+    const total = candidates.length;
+    dist.innerHTML = buckets.map(b => {
+      const count = candidates.filter(c => {
+        const s = parseFloat(c.score) || 0;
+        return s >= b.min && s < b.max;
+      }).length;
+      const pct = total ? Math.round((count / total) * 100) : 0;
+      return `
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px;">
+            <span style="color:#a0a0a0;">${b.label}</span>
+            <span style="font-weight:600;">${count} <span style="color:#a0a0a0;font-weight:400;">(${pct}%)</span></span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${b.color};border-radius:3px;transition:width 0.6s ease;"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  function doLogout() {
+    AUTH = '';
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('mainWrapper').classList.remove('with-sidebar');
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginWrap').style.display = 'flex';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('loginError').textContent = '';
+  }
 
   async function doLogin() {
     const pw = document.getElementById('passwordInput').value;
@@ -546,7 +1501,9 @@
     }
     AUTH = pw;
     document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dashboard').style.display = 'flex';
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('mainWrapper').classList.add('with-sidebar');
     loadDashboard();
   }
 
@@ -555,74 +1512,120 @@
   });
 
   async function loadDashboard() {
+    document.getElementById('skeletonLoader').style.display = 'block';
+    document.getElementById('dashContent').style.display = 'none';
+
     const [statsRes, candsRes] = await Promise.all([
       fetch('/api/panel/stats', { headers: { 'X-Recruiter-Password': AUTH } }),
       fetch('/api/panel/candidatos', { headers: { 'X-Recruiter-Password': AUTH } }),
     ]);
     const stats = await statsRes.json();
     const { candidates } = await candsRes.json();
+    _cachedCandidates = candidates;
+    _cachedStats = stats;
 
     document.getElementById('statTotal').textContent = stats.total ?? 0;
-    document.getElementById('statAvg').textContent = stats.avg_score ?? '—';
-    document.getElementById('statTop').textContent = stats.high_score ?? 0;
+    document.getElementById('statAvg').textContent   = stats.avg_score ?? '—';
+    document.getElementById('statTop').textContent   = stats.high_score ?? 0;
 
-    const grid = document.getElementById('candidatesGrid');
-    if (!candidates.length) {
-      grid.innerHTML = '<div class="empty">No hay candidatos aún</div>';
-      return;
+    const total = stats.total ?? 0;
+    const top   = stats.high_score ?? 0;
+    if (total > 0) {
+      document.getElementById('statTotalTrend').textContent = total + ' recibidos en total';
+      document.getElementById('statTopTrend').textContent   = Math.round((top / total) * 100) + '% del total califica';
     }
 
-    grid.innerHTML = candidates.map(c => {
-      const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-      return `
-        <div class="candidate-card">
-          <div class="candidate-score">${c.score}/10</div>
-          <div class="candidate-info">
-            <h3>${c.name}</h3>
-            <p>Posición: ${c.position || 'No especificada'}</p>
-            <p>Experiencia: ${c.years_experience ?? '—'} años</p>
-            <p>Disponibilidad: ${c.availability || '—'}</p>
+    const grid = document.getElementById('candidatesGrid');
+
+    if (!candidates.length) {
+      grid.innerHTML = `
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            No hay candidatos aún
           </div>
-          <div class="candidate-actions">
-            <a href="#" class="action-download" onclick="downloadCV(${c.id}); return false;">📥 Descargar</a>
-            <button class="action-view" onclick="openModal(${c.id})">👁 Ver Detalles</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+        </td></tr>`;
+    } else {
+      grid.innerHTML = candidates.map((c, i) => {
+        const score   = parseFloat(c.score) || 0;
+        const cls     = score >= 8 ? 'score-green' : score >= 6 ? 'score-yellow' : 'score-red';
+        const rankNum = String(i + 1).padStart(2, '0');
+        return `
+          <tr data-cid="${c.id}" onclick="openModal(${c.id})">
+            <td class="col-rank">${esc(rankNum)}</td>
+            <td class="col-name">${esc(c.name)}</td>
+            <td><span class="score-badge ${cls}">${esc(c.score)}</span></td>
+            <td class="col-label">${esc(c.score_label || '—')}</td>
+            <td class="col-label">${esc(c.years_experience ?? '—')} años</td>
+            <td class="col-avail">${esc(c.availability || '—')}</td>
+            <td class="col-estado">${renderEstadoBadge(c.estado || 'pendiente')}</td>
+            <td class="col-actions" onclick="event.stopPropagation()">
+              <button class="icon-btn" title="Descargar CV" onclick="downloadCV(${c.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+              <button class="icon-btn" title="Ver detalles" onclick="openModal(${c.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('skeletonLoader').style.display = 'none';
+    document.getElementById('dashContent').style.display = 'block';
   }
 
-  function downloadCV(id) {
-    window.open(`/api/panel/candidatos/${id}/cv?x_recruiter_password=${AUTH}`, '_blank');
+  async function downloadCV(id) {
+    const res = await fetch(`/api/panel/candidatos/${id}/cv`, { headers: { 'X-Recruiter-Password': AUTH } });
+    if (!res.ok) { alert('Error al descargar el CV.'); return; }
+    const blob = await res.blob();
+    const cd   = res.headers.get('Content-Disposition') || '';
+    const name = cd.match(/filename="(.+?)"/)?.[1] || `cv-${id}.pdf`;
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function openModal(id) {
     const res = await fetch(`/api/panel/candidatos/${id}`, { headers: { 'X-Recruiter-Password': AUTH } });
-    const c = await res.json();
+    const c   = await res.json();
     const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const score    = parseFloat(c.score) || 0;
+    const pct      = Math.min(score / 10, 1);
+    const circ     = 251.3;
+    const filled   = pct * circ;
+    const ringColor = score >= 8 ? '#22c55e' : score >= 6 ? '#eab308' : '#e43c2f';
 
-    document.getElementById('mAvatar').textContent = initials;
-    document.getElementById('mName').textContent = c.name;
-    document.getElementById('mEmail').textContent = c.email || 'Sin email';
-    document.getElementById('mSummary').textContent = c.summary || '—';
-    document.getElementById('mStrength').textContent = c.strength || '—';
+    document.getElementById('mAvatar').textContent      = initials;
+    document.getElementById('mName').textContent        = c.name;
+    document.getElementById('mEmail').textContent       = c.email || 'Sin email';
+    document.getElementById('mSummary').textContent     = c.summary || '—';
+    document.getElementById('mStrength').textContent    = c.strength || '—';
+    document.getElementById('mScoreBarFill').style.width = (pct * 100) + '%';
+
+    document.getElementById('mScoreRing').innerHTML = `
+      <svg width="72" height="72" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="${ringColor}" stroke-width="7"
+          stroke-dasharray="${filled} ${circ}" stroke-linecap="round"
+          transform="rotate(-90 50 50)" style="transition:stroke-dasharray 0.6s ease"/>
+        <text x="50" y="50" text-anchor="middle" dominant-baseline="central"
+          font-size="22" font-weight="800" fill="white" font-family="Poppins,sans-serif">${c.score}</text>
+      </svg>`;
 
     const wk = document.getElementById('mWeaknesses');
-    wk.innerHTML = (c.weaknesses || []).map(w => `<li>${w}</li>`).join('') || '<li>—</li>';
+    wk.innerHTML = (c.weaknesses || []).map(w => `<li>${esc(w)}</li>`).join('') || '<li>—</li>';
 
     const sk = document.getElementById('mSkills');
-    sk.innerHTML = (c.matching_skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('') || '<span style="color: var(--color-text-secondary);">—</span>';
+    sk.innerHTML = (c.matching_skills || []).map(s => `<span class="skill-tag">${esc(s)}</span>`).join('') || '<span style="color:#a0a0a0">—</span>';
 
     document.getElementById('mAnswers').innerHTML = `
-      <div class="answer-row"><span>Disponibilidad</span><span>${c.availability || '—'}</span></div>
-      <div class="answer-row"><span>Sueldo esperado</span><span>${c.expected_salary || '—'}</span></div>
-      <div class="answer-row"><span>Años de experiencia</span><span>${c.specific_experience || '—'}</span></div>
-    `;
+      <div class="answer-row"><span>Disponibilidad</span><span>${esc(c.availability || '—')}</span></div>
+      <div class="answer-row"><span>Sueldo esperado</span><span>${esc(c.expected_salary || '—')}</span></div>
+      <div class="answer-row"><span>Años de experiencia</span><span>${esc(c.specific_experience || '—')}</span></div>`;
 
-    document.getElementById('mDownloadBtn').onclick = () => {
-      window.open(`/api/panel/candidatos/${id}/cv?x_recruiter_password=${AUTH}`, '_blank');
-    };
-
+    document.getElementById('mDownloadBtn').onclick = () => downloadCV(id);
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -632,6 +1635,10 @@
 
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
   });
 </script>
 </body>
