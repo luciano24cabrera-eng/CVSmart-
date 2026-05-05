@@ -1,5 +1,5 @@
 import os, pytest
-os.environ.setdefault("GROQ_API_KEY", "test")
+os.environ.setdefault("GOOGLE_API_KEY", "test")
 
 from database import init_db, insert_candidate, get_all_candidates, get_stats, get_candidate, mark_email_sent
 import database, sqlite3
@@ -83,3 +83,56 @@ def test_get_stats_empty():
     stats = get_stats()
     assert stats["total"] == 0
     assert stats["avg_score"] == 0.0
+
+from database import update_candidate_estado
+
+def _make_candidate():
+    return insert_candidate(
+        name="Test User", email="t@test.com", phone="", cv_filename="t.pdf",
+        cv_original_name="t.pdf", score=7.0, score_label="Bueno",
+        years_experience=2, education_level="Licenciatura",
+        matching_skills='[]', summary="", strength="", weaknesses='[]',
+        full_analysis='{}', availability="Inmediata",
+        expected_salary="25000", specific_experience=""
+    )
+
+def test_candidate_has_estado_column():
+    cid = _make_candidate()
+    c = get_candidate(cid)
+    assert c["estado"] == "pendiente"
+
+def test_update_candidate_estado_aceptado():
+    cid = _make_candidate()
+    result = update_candidate_estado(cid, "aceptado", fecha_inicio="2026-06-01")
+    assert result is True
+    c = get_candidate(cid)
+    assert c["estado"] == "aceptado"
+    assert c["fecha_inicio"] == "2026-06-01"
+
+def test_update_candidate_estado_agendado():
+    cid = _make_candidate()
+    result = update_candidate_estado(
+        cid, "agendado",
+        fecha_cita="2026-05-20", hora_cita="10:00", notas_cita="Zoom"
+    )
+    assert result is True
+    c = get_candidate(cid)
+    assert c["estado"] == "agendado"
+    assert c["fecha_cita"] == "2026-05-20"
+    assert c["hora_cita"] == "10:00"
+    assert c["notas_cita"] == "Zoom"
+
+def test_update_candidate_estado_rechazado():
+    cid = _make_candidate()
+    result = update_candidate_estado(cid, "rechazado")
+    assert result is True
+    assert get_candidate(cid)["estado"] == "rechazado"
+
+def test_update_candidate_estado_not_found():
+    result = update_candidate_estado(9999, "aceptado")
+    assert result is False
+
+def test_get_all_candidates_includes_estado():
+    _make_candidate()
+    candidates = get_all_candidates()
+    assert "estado" in candidates[0]
