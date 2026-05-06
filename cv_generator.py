@@ -1,21 +1,25 @@
-import os, re, json, io
+import os, re, json, io, time
 import threading
-from groq import Groq
+from google import genai
+from google.genai import types
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 
+class AIUnavailableError(RuntimeError):
+    """Raised when Gemini is overloaded/unavailable after retries."""
+
 _client = None
 _client_lock = threading.Lock()
 
-def _get_client() -> Groq:
+def _get_client():
     global _client
     if _client is None:
         with _client_lock:
             if _client is None:
-                _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+                _client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
     return _client
 
 IMPROVE_PROMPT = """Eres un experto en recursos humanos y redacción de CVs profesionales en México.
@@ -35,17 +39,37 @@ Devuelve SOLO un JSON válido sin markdown con esta estructura exacta:
 }
 Datos del candidato: {datos}"""
 
+def _is_overloaded(exc: Exception) -> bool:
+    msg = str(exc).upper()
+    return "503" in msg or "UNAVAILABLE" in msg or "OVERLOADED" in msg
+
 def improve_cv_with_ai(cv_data: dict) -> dict:
     prompt = IMPROVE_PROMPT.replace("{datos}", json.dumps(cv_data, ensure_ascii=False))
-    try:
-        completion = _get_client().chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except Exception as e:
-        raise RuntimeError(f"Error al conectar con la IA: {e}") from e
-    raw = completion.choices[0].message.content.strip()
+    model = os.getenv("GOOGLE_MODEL", "gemini-flash-latest")
+    delays = [1, 2, 4]
+    last_exc = None
+    for attempt, delay in enumerate([0] + delays):
+        if delay:
+            time.sleep(delay)
+        try:
+            response = _get_client().models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=4096,
+                    response_mime_type="application/json",
+                ),
+            )
+            break
+        except Exception as e:
+            last_exc = e
+            if not _is_overloaded(e):
+                raise RuntimeError(f"Error al conectar con la IA: {e}") from e
+    else:
+        raise AIUnavailableError(
+            "El servicio de IA está saturado. Intenta de nuevo en unos minutos."
+        ) from last_exc
+    raw = response.text.strip()
     try:
         match = re.search(r'\{[\s\S]*\}', raw)
         return json.loads(match.group(0) if match else raw)

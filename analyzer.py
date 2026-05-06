@@ -1,13 +1,14 @@
 import os, re, json, io
 import pdfplumber
-from groq import Groq
+from google import genai
+from google.genai import types
 
 _client = None
 
-def _get_client() -> Groq:
+def _get_client():
     global _client
     if _client is None:
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        _client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
     return _client
 
 PROMPT = """Eres un experto en recursos humanos. Analiza el siguiente CV.
@@ -40,7 +41,7 @@ def _parse_analysis(raw: str) -> dict:
         analysis["score_label"] = score_label(analysis.get("puntaje", 5))
         return analysis
     except (json.JSONDecodeError, AttributeError, ValueError) as e:
-        print(f"⚠️  Could not parse Groq response: {e}. Raw: {raw[:100]}")
+        print(f"⚠️  Could not parse Google AI response: {e}. Raw: {raw[:100]}")
         return {
             "nombre": "No identificado", "años_experiencia": 0,
             "nivel_estudios": "No especificado", "habilidades_coincidentes": [],
@@ -62,11 +63,14 @@ def analyze_cv(pdf_bytes: bytes) -> dict:
         raise ValueError("El PDF no contiene texto legible.")
     prompt = PROMPT.replace("{CV_TEXT}", text[:12000])
     try:
-        completion = _get_client().chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
+        response = _get_client().models.generate_content(
+            model=os.getenv("GOOGLE_MODEL", "gemini-flash-latest"),
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                max_output_tokens=2048,
+                response_mime_type="application/json",
+            ),
         )
     except Exception as e:
         raise RuntimeError(f"Error al conectar con la IA: {e}") from e
-    return _parse_analysis(completion.choices[0].message.content.strip())
+    return _parse_analysis(response.text.strip())

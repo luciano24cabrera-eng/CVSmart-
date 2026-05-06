@@ -1,4 +1,5 @@
 import os, json, re
+import traceback
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,7 +17,7 @@ from database import (
 )
 from analyzer import analyze_cv
 from email_sender import send_feedback_email, send_action_email
-from cv_generator import improve_cv_with_ai, generate_cv_pdf
+from cv_generator import improve_cv_with_ai, generate_cv_pdf, AIUnavailableError
 
 CVS_DIR = Path("cvs")
 
@@ -211,8 +212,12 @@ async def generar_cv(cv_data: dict = Body(...)):
     try:
         improved = improve_cv_with_ai(cv_data)
         pdf_bytes = generate_cv_pdf(improved)
+    except AIUnavailableError as e:
+        traceback.print_exc()
+        raise HTTPException(503, str(e))
     except Exception as e:
-        raise HTTPException(503, f"Error al generar CV: {e}")
+        traceback.print_exc()
+        raise HTTPException(500, f"Error al generar CV: {e}")
     name = improved.get("nombre", "CV").replace(" ", "_")
     return StreamingResponse(
         iter([pdf_bytes]),

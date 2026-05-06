@@ -13,49 +13,7 @@
   <link rel="stylesheet" href="./styles/components.css" />
   <link rel="stylesheet" href="./styles/animations.css" />
 
-  <!-- Hero Section Styles -->
   <style>
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 120px 2rem 4rem;
-      background-color: var(--color-bg-primary);
-      position: relative;
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 2px;
-      height: 40%;
-      background-color: var(--color-accent);
-      opacity: 0.2;
-    }
-
-    .hero h1 {
-      margin-bottom: 1.5rem;
-    }
-
-    .hero p {
-      font-size: 1.2rem;
-      color: var(--color-text-secondary);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
-    }
-
-    .hero-btns {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
     .container {
       max-width: 1100px;
       margin: 0 auto;
@@ -66,30 +24,82 @@
     }
 
     .section-title {
-      font-size: 2rem;
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
       font-weight: var(--fw-extra-bold);
       color: var(--color-text-primary);
       text-align: center;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
     }
 
     .section-sub {
       text-align: center;
       color: var(--color-text-secondary);
-      font-size: 1.1rem;
+      font-size: 1rem;
       margin-bottom: 3rem;
     }
 
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 2rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(228, 60, 47, 0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 .accent {
+      color: var(--color-accent);
+    }
+
+    .hero > .container > p {
+      font-size: 1.1rem;
+      color: var(--color-text-secondary);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 0.875rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* STEPS */
     .steps {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.5rem;
     }
 
     .step {
-      text-align: center;
+      text-align: left;
     }
 
+    .step h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* FEATURES */
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -97,31 +107,52 @@
     }
 
     .feature {
-      text-align: center;
+      text-align: left;
     }
 
     .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      margin-bottom: 0.875rem;
+      display: block;
+    }
+
+    /* CTA SECTION */
+    .section-cta {
+      background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+      text-align: center;
+      border-top: 1px solid rgba(228, 60, 47, 0.06);
+    }
+
+    .section-cta h2 {
+      letter-spacing: -0.02em;
+      margin-bottom: 0.875rem;
+    }
+
+    .section-cta p {
+      color: var(--color-text-secondary);
+      margin-bottom: 2rem;
+      font-size: 1rem;
     }
 
     @media (max-width: 640px) {
       .hero {
-        padding: 80px 1rem 3rem;
+        padding: 80px 1.25rem 4rem;
       }
       .hero-btns {
         flex-direction: column;
+        align-items: center;
       }
       .btn {
         width: 100%;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
 
-<nav>
-  <a class="nav-logo" href="/">🧠 CVSmart</a>
+<nav id="navbar">
+  <a class="nav-logo" href="/">CV<span class="accent">Smart</span></a>
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="/aplicar">Postularme</a>
@@ -134,12 +165,36 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
-    <h1>Filtra CVs con<br><span style="color: var(--color-accent);">Inteligencia Artificial</span></h1>
-    <p>CVSmart analiza cada candidato, lo puntúa del 1 al 10 y entrega al reclutador una lista priorizada lista para tomar decisiones.</p>
+    <span class="badge-ai">Impulsado por IA</span>
+    <h1>Filtra candidatos<br>de forma <span class="accent">inteligente</span></h1>
+    <p>CVSmart analiza cada CV, puntúa candidatos del 1 al 10 y entrega al reclutador una lista priorizada lista para tomar decisiones.</p>
     <div class="hero-btns">
-      <a href="/aplicar" class="btn btn-primary">📄 Subir mi CV</a>
-      <a href="/crear-cv" class="btn btn-secondary">✨ Crear CV con IA</a>
-      <a href="/panel" class="btn btn-tertiary">🔒 Panel Reclutador</a>
+      <a href="/aplicar" class="btn btn-primary">Subir mi CV</a>
+      <a href="/crear-cv" class="btn btn-secondary">Crear CV con IA</a>
+      <a href="/panel" class="btn btn-tertiary">Panel Reclutador</a>
+    </div>
+    <p class="trust-counter">
+      <strong id="trust-count">500+</strong>&nbsp;empresas ya confían en CVSmart
+    </p>
+  </div>
+</section>
+
+<!-- ESTADÍSTICAS -->
+<section style="padding-top: 0; padding-bottom: var(--spacing-2xl);">
+  <div class="container">
+    <div class="stats-grid fade-in">
+      <div class="stat-item">
+        <div class="stat-number" data-target="500">0</div>
+        <div class="stat-label">CVs procesados por día</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" data-suffix="x" data-target="10">0</div>
+        <div class="stat-label">Más rápido que el filtrado manual</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" data-suffix="%" data-target="98">0</div>
+        <div class="stat-label">Precisión en clasificación</div>
+      </div>
     </div>
   </div>
 </section>
@@ -152,17 +207,17 @@
     <p class="section-sub fade-in">Tres pasos del CV al ranking</p>
     <div class="steps fade-in-container">
       <div class="card step fade-in">
-        <div class="step-number">1</div>
+        <span class="step-number">01</span>
         <h3>El candidato sube su CV</h3>
         <p>Sube su PDF en el formulario web y responde las 3 preguntas de filtro en segundos.</p>
       </div>
       <div class="card step fade-in">
-        <div class="step-number">2</div>
+        <span class="step-number">02</span>
         <h3>IA analiza el perfil</h3>
         <p>Groq extrae el texto, evalúa el perfil y genera un puntaje del 1 al 10 con fortalezas y áreas de mejora.</p>
       </div>
       <div class="card step fade-in">
-        <div class="step-number">3</div>
+        <span class="step-number">03</span>
         <h3>Reclutador decide</h3>
         <p>Ve el ranking, revisa resúmenes y descarga los CVs de los mejores perfiles desde el panel.</p>
       </div>
@@ -178,22 +233,22 @@
     <p class="section-sub fade-in">Una plataforma completa para reclutamiento inteligente</p>
     <div class="features fade-in-container">
       <div class="card feature fade-in">
-        <div class="feature-icon">📤</div>
+        <span class="feature-icon">📤</span>
         <h3>Recepción por formulario web</h3>
         <p>Los candidatos suben su CV directamente desde esta plataforma. Sin correos ni carpetas desordenadas.</p>
       </div>
       <div class="card feature fade-in">
-        <div class="feature-icon">🤖</div>
+        <span class="feature-icon">🤖</span>
         <h3>Análisis con IA</h3>
         <p>Groq analiza cada CV evaluando experiencia, estudios y habilidades relevantes para el puesto.</p>
       </div>
       <div class="card feature fade-in">
-        <div class="feature-icon">📧</div>
+        <span class="feature-icon">📧</span>
         <h3>Retroalimentación automática</h3>
         <p>Cada candidato recibe un correo con su nivel de perfil, fortaleza y áreas de oportunidad.</p>
       </div>
       <div class="card feature fade-in">
-        <div class="feature-icon">📝</div>
+        <span class="feature-icon">📝</span>
         <h3>Creador de CV con IA</h3>
         <p>Los candidatos pueden generar un CV profesional con ayuda de IA y descargarlo como PDF.</p>
       </div>
@@ -202,23 +257,77 @@
 </section>
 
 <!-- CTA -->
-<section style="background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary)); text-align: center;">
+<section class="section-cta">
   <div class="container">
-    <h2 style="color: var(--color-text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">¿Listo para empezar?</h2>
-    <p style="color: var(--color-text-secondary); margin-bottom: 2rem;">Sube tu CV ahora y recibe retroalimentación personalizada con IA.</p>
-    <a href="/aplicar" class="btn btn-primary">📄 Subir mi CV ahora</a>
+    <h2 class="fade-in">¿Listo para empezar?</h2>
+    <p class="fade-in">Sube tu CV ahora y recibe retroalimentación personalizada con IA.</p>
+    <a href="/aplicar" class="btn btn-primary fade-in">Subir mi CV ahora</a>
   </div>
 </section>
 
-<footer style="background-color: var(--color-bg-primary); color: var(--color-text-secondary); text-align: center; padding: 2rem; font-size: 0.9rem; border-top: 1px solid var(--color-border-light);">
-  <p>CVSmart &copy; 2026 — Potenciado por <strong style="color: var(--color-accent);">Groq AI</strong></p>
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a class="nav-logo" href="/">CV<span class="accent">Smart</span></a>
+      <p>Reclutamiento inteligente para equipos modernos. Filtrado de CVs potenciado por inteligencia artificial.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Plataforma</h4>
+      <ul>
+        <li><a href="/aplicar">Subir CV</a></li>
+        <li><a href="/crear-cv">Crear CV</a></li>
+        <li><a href="/panel">Panel Reclutador</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contacto</h4>
+      <ul>
+        <li><a href="mailto:hola@cvsmart.mx">hola@cvsmart.mx</a></li>
+        <li><a href="#">Soporte</a></li>
+        <li><a href="#">Privacidad</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    CVSmart &copy; 2026 — Potenciado por <strong>Groq AI</strong>
+  </div>
 </footer>
 
 <script>
+  // Navbar glassmorphism on scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // Intersection observer for fade-ins
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.1 });
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  document.querySelectorAll('.fade-in, .fade-in-container > *').forEach(el => observer.observe(el));
+
+  // Animated counters
+  const statsObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.target, 10);
+      const suffix = el.dataset.suffix || '+';
+      const duration = 1400;
+      const start = performance.now();
+      const animate = now => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(eased * target) + suffix;
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+      statsObserver.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-target]').forEach(el => statsObserver.observe(el));
 </script>
 </body>
 </html>

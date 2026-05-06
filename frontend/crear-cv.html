@@ -484,7 +484,7 @@
 
     <div class="button-group">
       <button type="submit" class="cv-btn cv-btn-primary" id="generateBtn">✨ Generar CV</button>
-      <button type="reset" class="cv-btn cv-btn-secondary">Limpiar</button>
+      <button type="button" class="cv-btn cv-btn-secondary" id="clearBtn">Limpiar</button>
     </div>
   </form>
 
@@ -577,6 +577,12 @@
     if (eduCount >= 2) document.getElementById('addEduBtn').style.display = 'none';
   });
 
+  // ── Clear form ─────────────────────────────────────────────────────
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('cvForm').reset();
+    document.querySelectorAll('.tag').forEach(t => t.remove());
+  });
+
   // ── Form submit ───────────────────────────────────────────────────
   let lastCvData = null;
 
@@ -645,22 +651,26 @@
     }
   });
 
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   function renderPreview(cv) {
     document.getElementById('pvNombre').textContent = cv.nombre;
     document.getElementById('pvContacto').textContent = `${cv.contacto.email}  |  ${cv.contacto.telefono}`;
-    if (cv.puesto_objetivo) document.getElementById('pvPuesto').innerHTML = `<h4>Puesto objetivo</h4><p>${cv.puesto_objetivo}</p>`;
-    if (cv.resumen_profesional) document.getElementById('pvResumen').innerHTML = `<h4>Resumen Profesional</h4><p>${cv.resumen_profesional}</p>`;
+    if (cv.puesto_objetivo) document.getElementById('pvPuesto').innerHTML = `<h4>Puesto objetivo</h4><p>${esc(cv.puesto_objetivo)}</p>`;
+    if (cv.resumen_profesional) document.getElementById('pvResumen').innerHTML = `<h4>Resumen Profesional</h4><p>${esc(cv.resumen_profesional)}</p>`;
     if (cv.experiencia?.length) {
       document.getElementById('pvExp').innerHTML = '<h4>Experiencia Laboral</h4>' +
-        cv.experiencia.map(x => `<div class="exp-item"><strong>${x.puesto}</strong> — ${x.empresa} (${x.periodo})<ul>${(x.logros||[]).map(l=>`<li>${l}</li>`).join('')}</ul></div>`).join('');
+        cv.experiencia.map(x => `<div class="exp-item"><strong>${esc(x.puesto)}</strong> — ${esc(x.empresa)} (${esc(x.periodo)})<ul>${(x.logros||[]).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`).join('');
     }
     if (cv.educacion?.length) {
       document.getElementById('pvEdu').innerHTML = '<h4>Educación</h4>' +
-        cv.educacion.map(x => `<p><strong>${x.carrera}</strong> — ${x.institucion} (${x.año})</p>`).join('');
+        cv.educacion.map(x => `<p><strong>${esc(x.carrera)}</strong> — ${esc(x.institucion)} (${esc(x.año)})</p>`).join('');
     }
-    if (cv.habilidades_tecnicas?.length) document.getElementById('pvTech').innerHTML = '<h4>Habilidades Técnicas</h4><div class="preview-tags">' + cv.habilidades_tecnicas.map(s=>`<span class="preview-tag">${s}</span>`).join('') + '</div>';
-    if (cv.habilidades_blandas?.length) document.getElementById('pvSoft').innerHTML = '<h4>Habilidades Blandas</h4><div class="preview-tags">' + cv.habilidades_blandas.map(s=>`<span class="preview-tag">${s}</span>`).join('') + '</div>';
-    if (cv.idiomas?.length) document.getElementById('pvLang').innerHTML = '<h4>Idiomas</h4><div class="preview-tags">' + cv.idiomas.map(s=>`<span class="preview-tag">${s}</span>`).join('') + '</div>';
+    if (cv.habilidades_tecnicas?.length) document.getElementById('pvTech').innerHTML = '<h4>Habilidades Técnicas</h4><div class="preview-tags">' + cv.habilidades_tecnicas.map(s=>`<span class="preview-tag">${esc(s)}</span>`).join('') + '</div>';
+    if (cv.habilidades_blandas?.length) document.getElementById('pvSoft').innerHTML = '<h4>Habilidades Blandas</h4><div class="preview-tags">' + cv.habilidades_blandas.map(s=>`<span class="preview-tag">${esc(s)}</span>`).join('') + '</div>';
+    if (cv.idiomas?.length) document.getElementById('pvLang').innerHTML = '<h4>Idiomas</h4><div class="preview-tags">' + cv.idiomas.map(s=>`<span class="preview-tag">${esc(s)}</span>`).join('') + '</div>';
     document.getElementById('previewCard').style.display = 'block';
     document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
   }

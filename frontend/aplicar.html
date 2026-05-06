@@ -413,7 +413,7 @@
          <strong>Revisa tu correo</strong> — te enviamos retroalimentación personalizada con tus fortalezas y áreas de mejora.</p>
       <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
         <a href="/" class="btn-back">← Volver al inicio</a>
-        <a href="/crear-cv" style="display:inline-block; padding:12px 28px; background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; border-radius:10px; text-decoration:none; font-weight:600;">Mejorar mi CV →</a>
+        <a href="/crear-cv" style="display:inline-block; padding:12px 28px; background-color:var(--color-accent); color:#fff; border-radius:10px; text-decoration:none; font-weight:600;">Mejorar mi CV →</a>
       </div>
     </div>
   </div>
@@ -448,8 +448,15 @@
   }
 
   function showAlert(msg) {
-    document.getElementById('alertBox').innerHTML =
-      `<div class="alert alert-error"><span>❌</span><span>${msg}</span></div>`;
+    const span = document.createElement('span');
+    span.textContent = msg;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-error';
+    alertDiv.innerHTML = '<span>❌</span>';
+    alertDiv.appendChild(span);
+    const box = document.getElementById('alertBox');
+    box.innerHTML = '';
+    box.appendChild(alertDiv);
   }
 
   function animateProgress() {
