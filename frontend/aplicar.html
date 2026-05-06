@@ -328,13 +328,16 @@
 
 <nav>
   <a class="nav-logo" href="/">🧠 CVSmart</a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Inicio</a>
     <a href="/aplicar">Postularme</a>
     <a href="/crear-cv">Crear CV</a>
     <a href="/panel">Reclutador</a>
     <a href="/aplicar" class="btn-nav">Subir CV →</a>
   </div>
+  <button class="nav-hamburger" id="hamburger" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <main>
@@ -506,6 +509,17 @@
       showAlert('Error de conexión. Verifica que el servidor esté corriendo.');
     }
   });
+
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('open');
+  }));
 </script>
 </body>
 </html>
