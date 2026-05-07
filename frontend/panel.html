@@ -1529,12 +1529,19 @@
     document.getElementById('skeletonLoader').style.display = 'block';
     document.getElementById('dashContent').style.display = 'none';
 
-    const [statsRes, candsRes] = await Promise.all([
-      fetch('/api/panel/stats', { headers: { 'X-Recruiter-Password': AUTH } }),
-      fetch('/api/panel/candidatos', { headers: { 'X-Recruiter-Password': AUTH } }),
-    ]);
-    const stats = await statsRes.json();
-    const { candidates } = await candsRes.json();
+    let stats = {}, candidates = [];
+    try {
+      const [statsRes, candsRes] = await Promise.all([
+        fetch('/api/panel/stats', { headers: { 'X-Recruiter-Password': AUTH } }),
+        fetch('/api/panel/candidatos', { headers: { 'X-Recruiter-Password': AUTH } }),
+      ]);
+      stats = statsRes.ok ? await statsRes.json() : {};
+      const candsData = candsRes.ok ? await candsRes.json() : {};
+      candidates = candsData.candidates ?? [];
+    } catch (e) {
+      console.error('Error cargando panel:', e);
+    }
+
     _cachedCandidates = candidates;
     _cachedStats = stats;
 
