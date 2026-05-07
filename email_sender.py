@@ -1,6 +1,6 @@
-import os, json
+import os
 import html as _html
-import urllib.request
+import httpx
 
 _BADGE = {
     "Excelente": ("#166534", "#dcfce7"),
@@ -12,26 +12,22 @@ _WRAPPER_STYLE = "max-width:600px;margin:32px auto;background:#fff;border-radius
 _HEADER_STYLE  = "background:linear-gradient(135deg,#1F3864,#2E75B6);padding:32px;text-align:center"
 
 def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
-    api_key  = os.getenv("RESEND_API_KEY")
+    api_key   = os.getenv("RESEND_API_KEY")
     from_addr = os.getenv("RESEND_FROM", "onboarding@resend.dev")
     if not api_key:
         print("⚠️  Email no enviado: RESEND_API_KEY no configurado")
         return False
-    payload = json.dumps({
-        "from": from_addr,
-        "to": [to_email],
-        "subject": subject,
-        "html": html_body,
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=payload,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        method="POST",
-    )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status in (200, 201)
+        resp = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"from": from_addr, "to": [to_email], "subject": subject, "html": html_body},
+            timeout=10,
+        )
+        if resp.status_code not in (200, 201):
+            print(f"⚠️  Resend error {resp.status_code}: {resp.text}")
+            return False
+        return True
     except Exception as e:
         print(f"⚠️  Error enviando email a {to_email}: {e}")
         return False
