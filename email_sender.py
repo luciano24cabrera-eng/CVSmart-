@@ -1,6 +1,7 @@
-import os
+import os, smtplib
 import html as _html
-import httpx
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 _BADGE = {
     "Excelente": ("#166534", "#dcfce7"),
@@ -12,24 +13,22 @@ _WRAPPER_STYLE = "max-width:600px;margin:32px auto;background:#fff;border-radius
 _HEADER_STYLE  = "background:linear-gradient(135deg,#1F3864,#2E75B6);padding:32px;text-align:center"
 
 def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
-    api_key    = os.getenv("RESEND_API_KEY")
-    from_email = os.getenv("RESEND_FROM") or os.getenv("FROM_EMAIL", "CVSmart <onboarding@resend.dev>")
-    if not api_key:
-        print("⚠️  Email no enviado: RESEND_API_KEY no configurado en .env")
+    gmail_user     = os.getenv("GMAIL_USER")
+    gmail_password = os.getenv("GMAIL_APP_PASSWORD")
+    if not gmail_user or not gmail_password:
+        print("⚠️  Email no enviado: GMAIL_USER o GMAIL_APP_PASSWORD no configurados en .env")
         return False
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = gmail_user
+    msg["To"]      = to_email
+    msg.attach(MIMEText(html_body, "html"))
     try:
-        r = httpx.post(
-            "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"from": from_email, "to": [to_email], "subject": subject, "html": html_body},
-            timeout=15,
-        )
-        r.raise_for_status()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(gmail_user, gmail_password)
+            server.sendmail(gmail_user, to_email, msg.as_string())
         return True
-    except httpx.HTTPStatusError as e:
-        print(f"⚠️  Resend error {e.response.status_code}: {e.response.text}")
-        return False
-    except httpx.RequestError as e:
+    except (smtplib.SMTPException, OSError) as e:
         print(f"⚠️  Error enviando email a {to_email}: {e}")
         return False
 
