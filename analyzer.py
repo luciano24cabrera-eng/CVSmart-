@@ -1,4 +1,4 @@
-import os, re, json, io
+import os, re, json, io, time
 import pdfplumber
 from google import genai
 from google.genai import types
@@ -62,15 +62,32 @@ def analyze_cv(pdf_bytes: bytes) -> dict:
     if not text or len(text.strip()) < 30:
         raise ValueError("El PDF no contiene texto legible.")
     prompt = PROMPT.replace("{CV_TEXT}", text[:12000])
-    try:
-        response = _get_client().models.generate_content(
-            model=os.getenv("GOOGLE_MODEL", "gemini-flash-latest"),
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=2048,
-                response_mime_type="application/json",
-            ),
-        )
-    except Exception as e:
-        raise RuntimeError(f"Error al conectar con la IA: {e}") from e
-    return _parse_analysis(response.text.strip())
+    if os.getenv("GEMINI_MOCK") == "1":
+        return {
+            "nombre": "Candidato Demo", "años_experiencia": 3,
+            "nivel_estudios": "Licenciatura", "habilidades_coincidentes": ["Python", "SQL"],
+            "puntaje": 7, "score_label": "Bueno",
+            "resumen": "Candidato de prueba generado por mock.",
+            "fortaleza": "Experiencia técnica sólida",
+            "debilidades": ["Falta de experiencia en liderazgo", "Sin certificaciones"]
+        }
+
+    last_err = None
+    for attempt in range(3):
+        try:
+            response = _get_client().models.generate_content(
+                model=os.getenv("GOOGLE_MODEL", "gemini-flash-latest"),
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=4096,
+                    response_mime_type="application/json",
+                ),
+            )
+            return _parse_analysis(response.text.strip())
+        except Exception as e:
+            last_err = e
+            if "503" in str(e) and attempt < 2:
+                time.sleep(2 ** attempt)
+                continue
+            break
+    raise RuntimeError(f"Error al conectar con la IA: {last_err}") from last_err

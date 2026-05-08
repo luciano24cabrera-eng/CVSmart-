@@ -12,23 +12,24 @@ _WRAPPER_STYLE = "max-width:600px;margin:32px auto;background:#fff;border-radius
 _HEADER_STYLE  = "background:linear-gradient(135deg,#1F3864,#2E75B6);padding:32px;text-align:center"
 
 def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
-    api_key   = os.getenv("RESEND_API_KEY")
-    from_addr = os.getenv("RESEND_FROM", "onboarding@resend.dev")
+    api_key    = os.getenv("RESEND_API_KEY")
+    from_email = os.getenv("FROM_EMAIL", "CVSmart <onboarding@resend.dev>")
     if not api_key:
-        print("⚠️  Email no enviado: RESEND_API_KEY no configurado")
+        print("⚠️  Email no enviado: RESEND_API_KEY no configurado en .env")
         return False
     try:
-        resp = httpx.post(
+        r = httpx.post(
             "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {api_key}"},
-            json={"from": from_addr, "to": [to_email], "subject": subject, "html": html_body},
-            timeout=10,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"from": from_email, "to": [to_email], "subject": subject, "html": html_body},
+            timeout=15,
         )
-        if resp.status_code not in (200, 201):
-            print(f"⚠️  Resend error {resp.status_code}: {resp.text}")
-            return False
+        r.raise_for_status()
         return True
-    except Exception as e:
+    except httpx.HTTPStatusError as e:
+        print(f"⚠️  Resend error {e.response.status_code}: {e.response.text}")
+        return False
+    except httpx.RequestError as e:
         print(f"⚠️  Error enviando email a {to_email}: {e}")
         return False
 
