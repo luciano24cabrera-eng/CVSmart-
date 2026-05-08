@@ -1201,6 +1201,31 @@
       </div>
     </div><!-- /#dashContent (Dashboard section) -->
 
+<!-- HISTORIAL -->
+<section id="historialSection" style="margin-top:2rem">
+  <div id="historialToggle" onclick="toggleHistorial()"
+       style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;user-select:none">
+    <svg id="historialChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+    <span style="font-weight:600;color:#e2e8f0">Historial de candidatos archivados</span>
+    <span id="historialCount" style="margin-left:auto;background:rgba(255,255,255,0.08);padding:2px 10px;border-radius:20px;font-size:0.8rem;color:#9ca3af">0</span>
+  </div>
+  <div id="historialContent" style="display:none;margin-top:0.75rem">
+    <table class="candidates-table" style="width:100%">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Score</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="historialGrid"></tbody>
+    </table>
+  </div>
+</section>
+
     <!-- CANDIDATOS section (tabla sola, sin stats) -->
     <div class="dash-content section-panel" id="sectionCandidatos" style="display:none;">
       <div class="dash-title-row">
@@ -1519,6 +1544,7 @@
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('mainWrapper').classList.add('with-sidebar');
     loadDashboard();
+    loadHistorial();
   }
 
   document.getElementById('passwordInput').addEventListener('keydown', e => {
@@ -1586,6 +1612,9 @@
               </button>
               <button class="icon-btn" title="Ver detalles" onclick="openModal(${c.id})">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+              <button class="icon-btn" title="Archivar candidato" onclick="archivarCandidato(${c.id}, this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
               </button>
             </td>
           </tr>`;
@@ -1803,6 +1832,79 @@
       if (e.target.id === id) e.target.classList.remove('open');
     });
   });
+
+  async function archivarCandidato(cid, btn) {
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/candidatos/${cid}/archivar`, {
+        method: 'POST',
+        headers: { 'X-Recruiter-Password': AUTH },
+      });
+      if (!r.ok) { showToast('Error al archivar candidato', 'error'); btn.disabled = false; return; }
+      const tr = btn.closest('tr');
+      tr.style.transition = 'opacity 0.3s';
+      tr.style.opacity = '0';
+      setTimeout(() => { tr.remove(); loadHistorial(); }, 300);
+      showToast('Candidato archivado', 'success');
+    } catch { showToast('Error de conexión', 'error'); btn.disabled = false; }
+  }
+
+  async function desarchivarCandidato(cid, btn) {
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/candidatos/${cid}/desarchivar`, {
+        method: 'POST',
+        headers: { 'X-Recruiter-Password': AUTH },
+      });
+      if (!r.ok) { showToast('Error al restaurar candidato', 'error'); btn.disabled = false; return; }
+      const tr = btn.closest('tr');
+      tr.style.transition = 'opacity 0.3s';
+      tr.style.opacity = '0';
+      setTimeout(() => { tr.remove(); loadDashboard(); }, 300);
+      showToast('Candidato restaurado', 'success');
+    } catch { showToast('Error de conexión', 'error'); btn.disabled = false; }
+  }
+
+  async function loadHistorial() {
+    try {
+      const r = await fetch('/api/panel/historial', { headers: { 'X-Recruiter-Password': AUTH } });
+      if (!r.ok) return;
+      const { candidates } = await r.json();
+      document.getElementById('historialCount').textContent = candidates.length;
+      const grid = document.getElementById('historialGrid');
+      if (!candidates.length) {
+        grid.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:1.5rem">Sin candidatos archivados</td></tr>`;
+        return;
+      }
+      grid.innerHTML = candidates.map(c => {
+        const score = parseFloat(c.score) || 0;
+        const cls   = score >= 8 ? 'score-green' : score >= 6 ? 'score-yellow' : 'score-red';
+        const fecha = c.created_at ? c.created_at.slice(0, 10) : '—';
+        return `
+          <tr>
+            <td>${esc(c.name)}</td>
+            <td style="color:#9ca3af">${esc(c.email || '—')}</td>
+            <td><span class="score-badge ${cls}">${esc(String(c.score))}</span></td>
+            <td>${renderEstadoBadge(c.estado || 'pendiente')}</td>
+            <td style="color:#9ca3af">${esc(fecha)}</td>
+            <td onclick="event.stopPropagation()">
+              <button class="icon-btn" title="Restaurar candidato" onclick="desarchivarCandidato(${c.id}, this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+              </button>
+            </td>
+          </tr>`;
+      }).join('');
+    } catch (e) { console.error('Error cargando historial:', e); }
+  }
+
+  function toggleHistorial() {
+    const content  = document.getElementById('historialContent');
+    const chevron  = document.getElementById('historialChevron');
+    const open     = content.style.display === 'none';
+    content.style.display = open ? 'block' : 'none';
+    chevron.style.transform = open ? 'rotate(180deg)' : '';
+    if (open) loadHistorial();
+  }
 </script>
 
 <!-- SUB-MODAL ACEPTAR -->
