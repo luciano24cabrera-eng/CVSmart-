@@ -57,3 +57,12 @@ def test_archivar_candidato_inexistente_retorna_false():
 
 def test_desarchivar_candidato_inexistente_retorna_false():
     assert unarchive_candidate(9999) is False
+
+def test_archivar_dos_veces_retorna_false_segunda_vez(cid):
+    assert archive_candidate(cid) is True
+    assert archive_candidate(cid) is False
+
+def test_desarchivar_dos_veces_retorna_false_segunda_vez(cid):
+    archive_candidate(cid)
+    assert unarchive_candidate(cid) is True
+    assert unarchive_candidate(cid) is False

@@ -108,7 +108,7 @@ def get_stats() -> dict:
                    COUNT(CASE WHEN score >= 8 THEN 1 END) as high_score,
                    COUNT(CASE WHEN score >= 5 AND score < 8 THEN 1 END) as mid_score,
                    COUNT(CASE WHEN score < 5 THEN 1 END) as low_score
-            FROM candidates
+            FROM candidates WHERE archivado = 0
         """).fetchone()
         result = dict(row)
         result["avg_score"] = result["avg_score"] or 0.0
