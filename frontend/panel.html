@@ -1845,6 +1845,7 @@
       tr.style.transition = 'opacity 0.3s';
       tr.style.opacity = '0';
       setTimeout(() => {
+        _cachedCandidates = _cachedCandidates.filter(c => c.id !== cid);
         tr.remove();
         if (document.getElementById('historialContent').style.display !== 'none') {
           loadHistorial();
