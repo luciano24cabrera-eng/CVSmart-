@@ -13,7 +13,7 @@ _HEADER_STYLE  = "background:linear-gradient(135deg,#1F3864,#2E75B6);padding:32p
 
 def _send_html_email(to_email: str, subject: str, html_body: str) -> bool:
     api_key    = os.getenv("RESEND_API_KEY")
-    from_email = os.getenv("FROM_EMAIL", "CVSmart <onboarding@resend.dev>")
+    from_email = os.getenv("RESEND_FROM") or os.getenv("FROM_EMAIL", "CVSmart <onboarding@resend.dev>")
     if not api_key:
         print("⚠️  Email no enviado: RESEND_API_KEY no configurado en .env")
         return False
