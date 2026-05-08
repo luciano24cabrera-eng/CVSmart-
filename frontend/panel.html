@@ -1844,7 +1844,15 @@
       const tr = btn.closest('tr');
       tr.style.transition = 'opacity 0.3s';
       tr.style.opacity = '0';
-      setTimeout(() => { tr.remove(); loadHistorial(); }, 300);
+      setTimeout(() => {
+        tr.remove();
+        if (document.getElementById('historialContent').style.display !== 'none') {
+          loadHistorial();
+        } else {
+          const count = parseInt(document.getElementById('historialCount').textContent || '0', 10);
+          document.getElementById('historialCount').textContent = count + 1;
+        }
+      }, 300);
       showToast('Candidato archivado', 'success');
     } catch { showToast('Error de conexión', 'error'); btn.disabled = false; }
   }
@@ -1877,6 +1885,7 @@
         return;
       }
       grid.innerHTML = candidates.map(c => {
+        const safeId = parseInt(c.id, 10);
         const score = parseFloat(c.score) || 0;
         const cls   = score >= 8 ? 'score-green' : score >= 6 ? 'score-yellow' : 'score-red';
         const fecha = c.created_at ? c.created_at.slice(0, 10) : '—';
@@ -1888,7 +1897,7 @@
             <td>${renderEstadoBadge(c.estado || 'pendiente')}</td>
             <td style="color:#9ca3af">${esc(fecha)}</td>
             <td onclick="event.stopPropagation()">
-              <button class="icon-btn" title="Restaurar candidato" onclick="desarchivarCandidato(${c.id}, this)">
+              <button class="icon-btn" title="Restaurar candidato" onclick="desarchivarCandidato(${safeId}, this)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
               </button>
             </td>
