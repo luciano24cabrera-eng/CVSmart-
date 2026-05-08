@@ -66,3 +66,55 @@ def test_desarchivar_dos_veces_retorna_false_segunda_vez(cid):
     archive_candidate(cid)
     assert unarchive_candidate(cid) is True
     assert unarchive_candidate(cid) is False
+
+# ── Endpoint tests ────────────────────────────────────────────────────
+
+from fastapi.testclient import TestClient
+
+HEADERS = {"X-Recruiter-Password": "testpass"}
+
+@pytest.fixture
+def client(tmp_db):
+    from main import app
+    return TestClient(app)
+
+@pytest.fixture
+def cid_via_db():
+    return insert_candidate(**_BASE)
+
+def test_endpoint_archivar(client, cid_via_db):
+    r = client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    assert r.status_code == 200
+    assert r.json()["success"] is True
+
+def test_endpoint_archivar_quita_del_dashboard(client, cid_via_db):
+    client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    r = client.get("/api/panel/candidatos", headers=HEADERS)
+    ids = [c["id"] for c in r.json()["candidates"]]
+    assert cid_via_db not in ids
+
+def test_endpoint_historial_muestra_archivados(client, cid_via_db):
+    client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    r = client.get("/api/panel/historial", headers=HEADERS)
+    assert r.status_code == 200
+    ids = [c["id"] for c in r.json()["candidates"]]
+    assert cid_via_db in ids
+
+def test_endpoint_desarchivar(client, cid_via_db):
+    client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    r = client.post(f"/api/candidatos/{cid_via_db}/desarchivar", headers=HEADERS)
+    assert r.status_code == 200
+    assert r.json()["success"] is True
+
+def test_endpoint_archivar_inexistente_retorna_404(client):
+    r = client.post("/api/candidatos/9999/archivar", headers=HEADERS)
+    assert r.status_code == 404
+
+def test_endpoint_desarchivar_inexistente_retorna_404(client):
+    r = client.post("/api/candidatos/9999/desarchivar", headers=HEADERS)
+    assert r.status_code == 404
+
+def test_endpoints_archivo_requieren_auth(client, cid_via_db):
+    assert client.post(f"/api/candidatos/{cid_via_db}/archivar").status_code == 401
+    assert client.post(f"/api/candidatos/{cid_via_db}/desarchivar").status_code == 401
+    assert client.get("/api/panel/historial").status_code == 401

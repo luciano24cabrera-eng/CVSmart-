@@ -14,6 +14,7 @@ load_dotenv()
 from database import (
     init_db, insert_candidate, get_all_candidates, get_stats,
     get_candidate, mark_email_sent, update_candidate_estado,
+    archive_candidate, unarchive_candidate, get_archived_candidates,
 )
 from analyzer import analyze_cv
 from email_sender import send_feedback_email, send_action_email
@@ -210,6 +211,26 @@ def candidato_rechazar(cid: int, _=Depends(require_auth)):
         if not sent:
             warning = "Estado actualizado pero el correo no pudo enviarse"
     return {"success": True, "email_sent": sent, "warning": warning}
+
+@app.post("/api/candidatos/{cid}/archivar")
+def candidato_archivar(cid: int, _=Depends(require_auth)):
+    if not get_candidate(cid):
+        raise HTTPException(404, "Candidato no encontrado")
+    if not archive_candidate(cid):
+        raise HTTPException(404, "Candidato no encontrado")
+    return {"success": True}
+
+@app.post("/api/candidatos/{cid}/desarchivar")
+def candidato_desarchivar(cid: int, _=Depends(require_auth)):
+    if not get_candidate(cid):
+        raise HTTPException(404, "Candidato no encontrado")
+    if not unarchive_candidate(cid):
+        raise HTTPException(404, "Candidato no encontrado")
+    return {"success": True}
+
+@app.get("/api/panel/historial")
+def panel_historial(_=Depends(require_auth)):
+    return {"candidates": get_archived_candidates()}
 
 # ── Generador de CV ───────────────────────────────────────────────────
 @app.post("/api/generar-cv")
