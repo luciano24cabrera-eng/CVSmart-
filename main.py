@@ -124,6 +124,11 @@ async def aplicar(
         "success": True,
         "candidateId": cid,
         "name": analysis.get("nombre", "Sin nombre"),
+        "score_label": analysis.get("score_label", "Bueno"),
+        "score": analysis.get("puntaje", 5),
+        "fortaleza": analysis.get("fortaleza", ""),
+        "debilidades": analysis.get("debilidades", []),
+        "resumen": analysis.get("resumen", ""),
         "message": "Tu postulación fue recibida. Recibirás un correo con retroalimentación.",
     }
 
