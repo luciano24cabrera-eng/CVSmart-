@@ -118,3 +118,14 @@ def test_endpoints_archivo_requieren_auth(client, cid_via_db):
     assert client.post(f"/api/candidatos/{cid_via_db}/archivar").status_code == 401
     assert client.post(f"/api/candidatos/{cid_via_db}/desarchivar").status_code == 401
     assert client.get("/api/panel/historial").status_code == 401
+
+def test_endpoint_archivar_dos_veces_retorna_409(client, cid_via_db):
+    client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    r = client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    assert r.status_code == 409
+
+def test_endpoint_desarchivar_dos_veces_retorna_409(client, cid_via_db):
+    client.post(f"/api/candidatos/{cid_via_db}/archivar", headers=HEADERS)
+    client.post(f"/api/candidatos/{cid_via_db}/desarchivar", headers=HEADERS)
+    r = client.post(f"/api/candidatos/{cid_via_db}/desarchivar", headers=HEADERS)
+    assert r.status_code == 409

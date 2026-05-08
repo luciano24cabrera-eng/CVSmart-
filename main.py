@@ -217,7 +217,7 @@ def candidato_archivar(cid: int, _=Depends(require_auth)):
     if not get_candidate(cid):
         raise HTTPException(404, "Candidato no encontrado")
     if not archive_candidate(cid):
-        raise HTTPException(404, "Candidato no encontrado")
+        raise HTTPException(409, "El candidato ya está archivado")
     return {"success": True}
 
 @app.post("/api/candidatos/{cid}/desarchivar")
@@ -225,7 +225,7 @@ def candidato_desarchivar(cid: int, _=Depends(require_auth)):
     if not get_candidate(cid):
         raise HTTPException(404, "Candidato no encontrado")
     if not unarchive_candidate(cid):
-        raise HTTPException(404, "Candidato no encontrado")
+        raise HTTPException(409, "El candidato ya está desarchivado")
     return {"success": True}
 
 @app.get("/api/panel/historial")
