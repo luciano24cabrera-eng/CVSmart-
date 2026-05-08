@@ -17,6 +17,7 @@ _NEW_COLS = [
     ("fecha_cita",   "TEXT"),
     ("hora_cita",    "TEXT"),
     ("notas_cita",   "TEXT"),
+    ("archivado",    "INTEGER DEFAULT 0"),
 ]
 
 _VALID_ESTADOS = {"pendiente", "aceptado", "agendado", "rechazado"}
@@ -89,7 +90,7 @@ def get_all_candidates() -> list:
                    education_level, matching_skills, summary, strength, weaknesses,
                    availability, expected_salary, specific_experience,
                    cv_original_name, email_sent, estado, created_at
-            FROM candidates ORDER BY score DESC, created_at DESC
+            FROM candidates WHERE archivado = 0 ORDER BY score DESC, created_at DESC
         """).fetchall()
         result = []
         for row in rows:
@@ -144,3 +145,27 @@ def update_candidate_estado(candidate_id: int, estado: str, **extra_fields) -> b
             params
         )
         return cur.rowcount > 0
+
+def archive_candidate(candidate_id: int) -> bool:
+    with _conn() as conn:
+        cur = conn.execute(
+            "UPDATE candidates SET archivado = 1 WHERE id = ? AND archivado = 0",
+            (candidate_id,)
+        )
+        return cur.rowcount > 0
+
+def unarchive_candidate(candidate_id: int) -> bool:
+    with _conn() as conn:
+        cur = conn.execute(
+            "UPDATE candidates SET archivado = 0 WHERE id = ? AND archivado = 1",
+            (candidate_id,)
+        )
+        return cur.rowcount > 0
+
+def get_archived_candidates() -> list:
+    with _conn() as conn:
+        rows = conn.execute("""
+            SELECT id, name, email, score, score_label, estado, created_at
+            FROM candidates WHERE archivado = 1 ORDER BY created_at DESC
+        """).fetchall()
+        return [dict(row) for row in rows]
