@@ -529,17 +529,22 @@
       }
       document.getElementById('loadingState').style.display = 'none';
 
-      document.getElementById('resName').textContent = data.name || '';
+      const nameSpan = document.getElementById('resName');
+      if (data.name) {
+        nameSpan.textContent = data.name;
+      } else {
+        nameSpan.closest('h2').textContent = '¡Postulación recibida!';
+      }
       document.getElementById('resFortaleza').textContent = data.fortaleza || '';
 
       const badge = document.getElementById('resBadge');
       badge.textContent = data.score_label || '';
       const classMap = { 'Excelente': 'excelente', 'Bueno': 'bueno', 'En desarrollo': 'desarrollo' };
-      badge.className = 'score-badge ' + (classMap[data.score_label] || '');
+      badge.className = 'score-badge ' + (classMap[data.score_label] || 'bueno');
 
       const ul = document.getElementById('resDebilidades');
       ul.innerHTML = '';
-      (data.debilidades || []).forEach(d => {
+      (Array.isArray(data.debilidades) ? data.debilidades : []).forEach(d => {
         const li = document.createElement('li');
         li.style.marginBottom = '4px';
         li.textContent = d;
