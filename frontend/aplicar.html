@@ -282,6 +282,17 @@
       transform: translateY(-2px);
     }
 
+    .score-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .score-badge.excelente { background: #dcfce7; color: #166534; }
+    .score-badge.bueno     { background: #fef3c7; color: #92400e; }
+    .score-badge.desarrollo{ background: #fee2e2; color: #991b1b; }
+
     /* Alert */
     .alert {
       padding: 12px 16px;
@@ -409,14 +420,30 @@
     </div>
 
     <!-- SUCCESS -->
-    <div class="success" id="successState">
+    <div class="success" id="successState" style="display:none">
       <div class="success-icon">🎉</div>
-      <h2>¡Postulación recibida!</h2>
-      <p>Tu CV fue analizado y guardado exitosamente.<br>
-         <strong>Revisa tu correo</strong> — te enviamos retroalimentación personalizada con tus fortalezas y áreas de mejora.</p>
-      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <h2>¡Postulación recibida, <span id="resName"></span>!</h2>
+      <p style="color:#6b7280;margin-bottom:1.5rem">Tu CV fue analizado exitosamente.<br>
+         <strong>Revisa tu correo</strong> — te enviamos retroalimentación completa.</p>
+
+      <div style="margin-bottom:1.5rem">
+        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Tu nivel de perfil</p>
+        <span id="resBadge" class="score-badge"></span>
+      </div>
+
+      <div style="background:#F0F7FF;border-left:4px solid var(--color-primary);border-radius:0 10px 10px 0;padding:1rem 1.25rem;margin-bottom:1.5rem;text-align:left">
+        <p style="font-size:0.85rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.4rem">Tu fortaleza principal</p>
+        <p id="resFortaleza" style="margin:0;color:#1F3864;font-weight:500"></p>
+      </div>
+
+      <div style="text-align:left;margin-bottom:1.75rem">
+        <p style="font-size:0.85rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.6rem">Áreas de oportunidad</p>
+        <ul id="resDebilidades" style="padding-left:1.2rem;color:#4b5563;margin:0"></ul>
+      </div>
+
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
         <a href="/" class="btn-back">← Volver al inicio</a>
-        <a href="/crear-cv" style="display:inline-block; padding:12px 28px; background-color:var(--color-accent); color:#fff; border-radius:10px; text-decoration:none; font-weight:600;">Mejorar mi CV →</a>
+        <a href="/crear-cv" style="display:inline-block;padding:12px 28px;background-color:var(--color-accent);color:#fff;border-radius:10px;text-decoration:none;font-weight:600;">Mejorar mi CV →</a>
       </div>
     </div>
   </div>
@@ -501,6 +528,24 @@
         return showAlert(data.detail || 'Error al procesar la postulación.');
       }
       document.getElementById('loadingState').style.display = 'none';
+
+      document.getElementById('resName').textContent = data.name || '';
+      document.getElementById('resFortaleza').textContent = data.fortaleza || '';
+
+      const badge = document.getElementById('resBadge');
+      badge.textContent = data.score_label || '';
+      const classMap = { 'Excelente': 'excelente', 'Bueno': 'bueno', 'En desarrollo': 'desarrollo' };
+      badge.className = 'score-badge ' + (classMap[data.score_label] || '');
+
+      const ul = document.getElementById('resDebilidades');
+      ul.innerHTML = '';
+      (data.debilidades || []).forEach(d => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '4px';
+        li.textContent = d;
+        ul.appendChild(li);
+      });
+
       document.getElementById('successState').style.display = 'block';
     } catch {
       clearInterval(timer);
